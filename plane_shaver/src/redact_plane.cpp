@@ -53,14 +53,15 @@ public:
 
   void handle_cloud(const sensor_msgs::PointCloud2ConstPtr& cloud_in)
   {
-    // Filter cloud -- MEDIAN FILTER
-    sensor_msgs::PointCloud2 cloud_filtered;
-    cloud_filtered = median_filter(*cloud_in);
     
     // Transform to AR Tag frame
     sensor_msgs::PointCloud2 cloud_tf;
     string frame_new = "/ar_marker_3";
-    cloud_tf = transform_cloud(cloud_filtered, frame_new);
+    cloud_tf = transform_cloud(*cloud_in, frame_new);
+
+    // Filter cloud -- MEDIAN FILTER
+    sensor_msgs::PointCloud2 cloud_filtered;
+    cloud_filtered = median_filter(cloud_tf);
 
     // Turn all points above the plane to black
     sensor_msgs::PointCloud2 cloud_out;
