@@ -16,6 +16,7 @@
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/median_filter.h>
 
 // Iterator stuff
 #include <iterator>
@@ -52,15 +53,19 @@ public:
 
   void handle_cloud(const sensor_msgs::PointCloud2ConstPtr& cloud_in)
   {
-    // Convert to PCL
-
+    // Filter cloud -- MEDIAN FILTER
+    sensor_msgs::PointCloud2 cloud_filtered;
+    cloud_filtered = median_filter(*cloud_in);
+    
     // Transform to AR Tag frame
-    sensor_msgs::PointCloud2 cloud_tf, cloud_out;
+    sensor_msgs::PointCloud2 cloud_tf;
     string frame_new = "/ar_marker_3";
-    cloud_tf = transform_cloud(*cloud_in, frame_new);
-    cloud_out = filter_cloud(cloud_tf, -0.10, 10);
+    cloud_tf = transform_cloud(cloud_filtered, frame_new);
 
     // Turn all points above the plane to black
+    sensor_msgs::PointCloud2 cloud_out;
+    cloud_out = apply_redaction(cloud_tf, -0.10, 10);
+
     // Convert to ROS Image msg
     sensor_msgs::Image image_out;
     toROSMsg(cloud_out, image_out);
@@ -85,7 +90,30 @@ public:
     }
   }
 
-  sensor_msgs::PointCloud2 filter_cloud(sensor_msgs::PointCloud2 cloud_in, float lower, float upper)
+  sensor_msgs::PointCloud2 median_filter(sensor_msgs::PointCloud2 cloud_in)
+  {
+    // Convert to PCL cloud
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
+    fromROSMsg(cloud_in, *cloud);
+
+    // Create the filtering object
+    pcl::MedianFilter<pcl::PointXYZRGB> filter;
+    filter.setInputCloud (cloud);
+    filter.setWindowSize (10);
+    //filter.setMaxAllowedMovement (0.50f);
+
+    // Filter it!
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZRGB>);
+    filter.applyFilter (*cloud_filtered);
+
+    // Convert back to ROS Image msg
+    sensor_msgs::PointCloud2 cloud_out;
+    toROSMsg(*cloud_filtered, cloud_out);
+    
+    return cloud_out;
+  }
+
+  sensor_msgs::PointCloud2 apply_redaction(sensor_msgs::PointCloud2 cloud_in, float lower, float upper)
   {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
     fromROSMsg(cloud_in, *cloud);
