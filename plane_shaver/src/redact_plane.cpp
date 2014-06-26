@@ -99,7 +99,7 @@ public:
     // Create the filtering object
     pcl::MedianFilter<pcl::PointXYZRGB> filter;
     filter.setInputCloud (cloud);
-    filter.setWindowSize (10);
+    filter.setWindowSize (3);
     //filter.setMaxAllowedMovement (0.50f);
 
     // Filter it!
