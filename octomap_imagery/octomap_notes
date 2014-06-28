@@ -1,0 +1,10 @@
+To get color info into OctoMaps:
++ try rgbdslam
+
+First implementation of OctoMap:
+- make one from a stored point cloud (.pcd file)
+- visualize with [octovis]
+- make a color one
+- visualize in color
+- project onto image plane
+- display image

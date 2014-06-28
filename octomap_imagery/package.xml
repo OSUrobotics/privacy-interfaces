@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package>
+  <name>octomap_imagery</name>
+  <version>0.0.0</version>
+  <description>The octomap_imagery package</description>
+
+  <maintainer email="ruebenm@onid.oregonstate.edu">ruebenm</maintainer>
+
+  <license>TODO</license>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>octomap</build_depend>
+  <build_depend>octomap_mapping</build_depend>
+  <build_depend>octomap_msgs</build_depend>
+  <build_depend>octomap_ros</build_depend>
+  <build_depend>roscpp</build_depend>
+
+  <run_depend>octomap</run_depend>
+  <run_depend>octomap_mapping</run_depend>
+  <run_depend>octomap_msgs</run_depend>
+  <run_depend>octomap_ros</run_depend>
+  <run_depend>roscpp</run_depend>
+
+
+  <export>
+  </export>
+
+</package>
