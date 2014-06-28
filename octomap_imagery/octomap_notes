@@ -2,9 +2,13 @@ To get color info into OctoMaps:
 + try rgbdslam
 
 First implementation of OctoMap:
-- make one from a stored point cloud (.pcd file)
-- visualize with [octovis]
-- make a color one
-- visualize in color
++ make one from a stored point cloud (.pcd file)
++ visualize with [octovis]
++ make a color one
++ visualize in color
 - project onto image plane
-- display image
++ display image
+
+Helpful links(?):
+http://answers.ros.org/question/173287/implementing-coloroctree-in-octomap-using-rgbdslam/
+https://code.google.com/p/alufr-ros-pkg/source/browse/trunk/rgbdslam_freiburg/rgbdslam/src/ColorOctomapServer.cpp

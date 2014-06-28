@@ -7,13 +7,14 @@ project(octomap_imagery)
 find_package(PCL REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
-  octomap
-  octomap_mapping
+#  octomap
+#  octomap_mapping
   octomap_msgs
   octomap_ros
   roscpp
   pcl_conversions
   pcl_ros
+  image_geometry
 )
 
 ## System dependencies are found with CMake's conventions
@@ -88,7 +89,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES octomap_imagery
-#  CATKIN_DEPENDS octomap octomap_mapping octomap_msgs octomap_ros roscpp
+CATKIN_DEPENDS octomap_msgs #octomap octomap_mapping octomap_ros roscpp
 #  DEPENDS system_lib
 )
 
@@ -119,6 +120,12 @@ target_link_libraries(octomap2Image
  )
 add_dependencies(octomap2Image octomap_imagery_gencpp)
 
+add_executable(reprojectImage src/reprojectImage.cpp)
+target_link_libraries(reprojectImage
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(reprojectImage octomap_imagery_gencpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
