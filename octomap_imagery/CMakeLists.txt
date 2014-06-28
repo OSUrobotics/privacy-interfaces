@@ -113,12 +113,12 @@ include_directories(
 ## Declare a cpp executable
 # add_executable(octomap_imagery_node src/octomap_imagery_node.cpp)
 
-add_executable(octomap2Image src/octomap2Image.cpp)
-target_link_libraries(octomap2Image
+add_executable(pcd2octree src/pcd2octree.cpp)
+target_link_libraries(pcd2octree
   ${PCL_LIBRARIES}  
   ${catkin_LIBRARIES} 
  )
-add_dependencies(octomap2Image octomap_imagery_gencpp)
+add_dependencies(pcd2octree octomap_imagery_gencpp)
 
 add_executable(reprojectImage src/reprojectImage.cpp)
 target_link_libraries(reprojectImage
@@ -126,6 +126,13 @@ target_link_libraries(reprojectImage
   ${catkin_LIBRARIES} 
  )
 add_dependencies(reprojectImage octomap_imagery_gencpp)
+
+add_executable(octomap2Image src/octomap2Image.cpp)
+target_link_libraries(octomap2Image
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(octomap2Image octomap_imagery_gencpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
