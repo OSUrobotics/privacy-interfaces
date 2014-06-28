@@ -41,31 +41,20 @@ int main (int argc, char** argv)
   ros::NodeHandle nh;
 
   // Create camera model (based on Kinect)
+  /*
   sensor_msgs::CameraInfo camInfo;
   camInfo.header.frame_id = "/camera_rgb_optical_frame";
   camInfo.height = 480;
   camInfo.width = 640;
   camInfo.distortion_model = "plumb_bob";
-  /*
-  double K[9] = {525.0, 0.0, 319.5, 0.0, 525.0, 239.5, 0.0, 0.0, 1.0};
-  for (int k = 0; k != 9; k++)
-      camInfo.K[k] = K[k];
-  double R[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-  for (int r = 0; r != 9; r++)
-      camInfo.R[r] = R[r];
-  double P[12] = {525.0, 0.0, 319.5, 0.0, 0.0, 525.0, 239.5, 0.0, 0.0, 0.0, 1.0, 0.0};
-  for (int p = 0; p != 12; p++)
-      camInfo.P[p] = P[p];
-  */
-  //camInfo.binning_x = 0;
-  //camInfo.binning_y = 0;
+
   image_geometry::PinholeCameraModel model;
   model.fromCameraInfo(camInfo);
   cv::Point3d ray;
   cv::Point2d uv_rect (0, 0);
   ray = model.projectPixelTo3dRay(uv_rect);
   cout << ray.x << ray.y << ray.z << endl;
-
+  */
 
   // Import cloud from .PCD file
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_in (new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -113,12 +102,13 @@ int main (int argc, char** argv)
   octomap::point3d origin (0,0,0), direction (0,0,1), end;
   octomap::ColorOcTreeNode* node;
   std::cout << "Start filling Image msg..." << std::endl;
-  for (it_im = image.data.begin(); it_im != image.data.end(); ++it_im)
+  unsigned short int foo = 0;
+  for (it_im = image.data.begin(); it_im != image.data.end(); ++it_im, foo++)
     {
       success = color_octree.castRay(origin, direction, end);
       node = color_octree.search(end);
       //std::cout << success << node->getColor() << std::endl;
-      *it_im = 128;
+      *it_im = foo;
     }
   std::cout << "Done." << std::endl;
 
