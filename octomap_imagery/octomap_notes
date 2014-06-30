@@ -6,9 +6,21 @@ First implementation of OctoMap:
 + visualize with [octovis]
 + make a color one
 + visualize in color
-- project onto image plane
++ project onto image plane
 + display image
 
 Helpful links(?):
 http://answers.ros.org/question/173287/implementing-coloroctree-in-octomap-using-rgbdslam/
 https://code.google.com/p/alufr-ros-pkg/source/browse/trunk/rgbdslam_freiburg/rgbdslam/src/ColorOctomapServer.cpp
+
+Next steps (ideas):
+- Separate octomap for each privacy category
+  - API for dividing one map into several
+- API for grabbing different resolutions...even in different regions
+- What's better? Lower-res map or lower-res image? Probably image
+- API for multi-res image (lower/higher res by region)
+-> How to do redaction?
+  - Big Bounding Box that intercepts rays
+  - Delete or flag individual leaves
+- Test speed with downsampling cloud data before updating octree
+- See how RGBDslam does color updating
