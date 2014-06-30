@@ -162,5 +162,5 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-add_executable(example src/example.cpp)
-target_link_libraries(example ${catkin_LIBRARIES} armadillo)
+add_executable(corner_finder src/corner_finder.cpp)
+target_link_libraries(corner_finder ${catkin_LIBRARIES} armadillo)
