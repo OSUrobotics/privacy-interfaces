@@ -1,6 +1,14 @@
-// 
+// Constructs an octree from a single PointCloud2 msg, then reprojects to a camera view.
+// INPUTS:
+// 1) Resolution of octree in meters (try 2-5cm)
+// 2) Downsampling factor of image, which is originally 640x480 (e.g. choose "10" for a 64x48 image)
+// 3) If True, transform cloud to '/map' frame before inserting into octree. Allows you to pretend the camera is moving using the static_transform_publisher node.
+
+
 #include <iostream>
 #include <stdlib.h>
+#include <string>
+
 // ROS
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
@@ -11,10 +19,10 @@
 #include <opencv2/core/core.hpp>
 
 // TF
-//#include <tf/transform_listener.h>
+#include <tf/transform_listener.h>
 
 // PCL
-//#include <pcl_ros/transforms.h>
+#include <pcl_ros/transforms.h>
 //#include <pcl/conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -43,9 +51,18 @@ int main (int argc, char** argv)
 {
   // Initialize node
   ros::init(argc, argv, "reprojectImage");
+  ros::NodeHandle nh;
+
+  // Argument checking
+  if (argc != 4) {
+    std::cerr << "Supply three arguments! See comments for what they mean." << std::endl;
+    return -1;
+  }
+
+  // Unpack inputs
   double res = atof(argv[1]);
   int bin_factor = atoi(argv[2]);
-  ros::NodeHandle nh;
+  bool has_tf = atoi(argv[3]);
 
   // Initialize rosbag stuff
   rosbag::Bag bag("/home/ruebenm/workspaces/privacy_ws/src/plane_shaver/bags/my-desk.bag");
@@ -83,13 +100,46 @@ int main (int argc, char** argv)
   model_binned.fromCameraInfo(info_binned);
   
   // De-bag a PointCloud2
-  sensor_msgs::PointCloud2::ConstPtr cloud = view_cloud.begin() -> instantiate<sensor_msgs::PointCloud2> ();
+  sensor_msgs::PointCloud2::Ptr cloud = view_cloud.begin() -> instantiate<sensor_msgs::PointCloud2> ();
   if (cloud != NULL)
     std::cout << "Point cloud de-bagged with frame_id: " << cloud->header.frame_id << std::endl;
 
+  // Transform?
+  sensor_msgs::PointCloud2 cloud_tf;
+  if (has_tf) 
+    {
+      tf::TransformListener listener;
+      bool can_transform;
+      string frame_new = "/map";
+      can_transform = listener.waitForTransform(cloud->header.frame_id, 
+						frame_new,
+						ros::Time(0), 
+						ros::Duration(3.0));
+      if (can_transform)
+	{
+	  cloud->header.stamp = ros::Time(0);
+	  pcl_ros::transformPointCloud(frame_new, 
+				       *cloud, 
+				       cloud_tf, 
+				       listener);
+	  std::cout << "Cloud transformed to frame: " << frame_new << std::endl;
+	}
+      else 
+	{
+	  std::cerr << "Could not transform! :-(" << std::endl;
+	  return -1;
+	}
+      
+    }
+
+
   // Convert PointCloud2 to pcl::PointCloud
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_in (new pcl::PointCloud<pcl::PointXYZRGB>);
-  fromROSMsg(*cloud, *cloud_in);
+  if (has_tf)
+    fromROSMsg(cloud_tf, *cloud_in);
+  else
+    fromROSMsg(*cloud, *cloud_in);
+    
   std::cout << "PointCloud is " << cloud_in->width << " wide x " << cloud_in->height << " high." << std::endl;
 
   // Load into *color* octree
@@ -132,76 +182,49 @@ int main (int argc, char** argv)
   //std::vector<uint8_t>::iterator it_im;
 
   // Fill Image msg (project octree onto camera plane)
-  std::cout << "Start filling Image msg..." << std::endl;
   cv::Point3d ray;
   cv::Point2d uv_dst;
-  octomap::point3d origin (0,0,0), end;
+  octomap::point3d origin (0,0,0), end;  // NEED TO UPDATE "origin" WITH TF FRAME
   bool success;
   octomap::ColorOcTreeNode* node;
   unsigned short int color[3];
   int bgr;
-  for (uv_dst.x = 0; uv_dst.x != image.width; uv_dst.x++)
-    {
-      for (uv_dst.y = 0; uv_dst.y != image.height; uv_dst.y++)
-	{
-	  //std::cout << "UV: (" << uv_dst.x << ", " << uv_dst.y << ")" << std::endl;
-	  ray = model_binned.projectPixelTo3dRay(uv_dst);
-	  //std::cout << "Ray: (" << ray.x << ", " << ray.y << ", " << ray.z << ")" << endl;
-	  octomap::point3d direction (ray.x, ray.y, ray.z);
-	  //std::cout << "Direction: (" << direction.x() << ", " << direction.y() << ", " << direction.z() << ")" << endl;
-
-	  success = color_octree.castRay(origin, direction, end);
-	  if (success)
-	    {
-	      node = color_octree.search(end);
-	      //std::cout << success << "  " << node->getColor() << std::endl;
-	      color[0] = node->getColor().b;  // blue
-	      color[1] = node->getColor().g;  // green
-	      color[2] = node->getColor().r;  // red
-	    }
-	  else
-	    color[0] = color[1] = color[2] = 0;  // black
-
-	  for (bgr = 0; bgr != 3; bgr++)
-	    image.data[(uv_dst.y * image.step) + (uv_dst.x * 3) + bgr] = color[bgr];
-	    
-	}
-    }
-  std::cout << "Done." << std::endl;
 
   // Publish image
   ros::Publisher pub = nh.advertise<sensor_msgs::Image>("image", 5);  // topic name works with image_view without remapping!
   ros::Rate loop_rate(10);
+  std::cout << "Filling Image msg..." << std::endl;
   while (ros::ok())
     {
-  for (uv_dst.x = 0; uv_dst.x != image.width; uv_dst.x++)
-    {
-      for (uv_dst.y = 0; uv_dst.y != image.height; uv_dst.y++)
+      model_binned.fromCameraInfo(info_binned);  // update model (in case of TF updates)
+      for (uv_dst.x = 0; uv_dst.x != image.width; uv_dst.x++)
 	{
-	  //std::cout << "UV: (" << uv_dst.x << ", " << uv_dst.y << ")" << std::endl;
-	  ray = model_binned.projectPixelTo3dRay(uv_dst);
-	  //std::cout << "Ray: (" << ray.x << ", " << ray.y << ", " << ray.z << ")" << endl;
-	  octomap::point3d direction (ray.x, ray.y, ray.z);
-	  //std::cout << "Direction: (" << direction.x() << ", " << direction.y() << ", " << direction.z() << ")" << endl;
-
-	  success = color_octree.castRay(origin, direction, end);
-	  if (success)
+	  for (uv_dst.y = 0; uv_dst.y != image.height; uv_dst.y++)
 	    {
-	      node = color_octree.search(end);
-	      //std::cout << success << "  " << node->getColor() << std::endl;
-	      color[0] = node->getColor().b;  // blue
-	      color[1] = node->getColor().g;  // green
-	      color[2] = node->getColor().r;  // red
+	      //std::cout << "UV: (" << uv_dst.x << ", " << uv_dst.y << ")" << std::endl;
+	      ray = model_binned.projectPixelTo3dRay(uv_dst);
+	      //std::cout << "Ray: (" << ray.x << ", " << ray.y << ", " << ray.z << ")" << endl;
+	      octomap::point3d direction (ray.x, ray.y, ray.z);
+	      //std::cout << "Direction: (" << direction.x() << ", " << direction.y() << ", " << direction.z() << ")" << endl;
+	      
+	      success = color_octree.castRay(origin, direction, end);
+	      if (success)
+		{
+		  node = color_octree.search(end);
+		  //std::cout << success << "  " << node->getColor() << std::endl;
+		  color[0] = node->getColor().b;  // blue
+		  color[1] = node->getColor().g;  // green
+		  color[2] = node->getColor().r;  // red
+		}
+	      else
+		color[0] = color[1] = color[2] = 0;  // black
+	      
+	      for (bgr = 0; bgr != 3; bgr++)
+		image.data[(uv_dst.y * image.step) + (uv_dst.x * 3) + bgr] = color[bgr];
+	      
 	    }
-	  else
-	    color[0] = color[1] = color[2] = 0;  // black
-
-	  for (bgr = 0; bgr != 3; bgr++)
-	    image.data[(uv_dst.y * image.step) + (uv_dst.x * 3) + bgr] = color[bgr];
-	    
 	}
-    }
-  std::cout << "Done." << std::endl;
+      std::cout << "Done. Publishing!" << std::endl;
       pub.publish(image);
       ros::spinOnce();
       loop_rate.sleep();
