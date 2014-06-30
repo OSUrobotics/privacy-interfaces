@@ -91,3 +91,22 @@ void publish_corner(arma::fmat* plane_coefficients, arma::fmat* plane_intersecti
 
     pub.publish(corner_point);
 }
+
+class Corner 
+{
+
+};
+
+class CornerFinder
+{
+public:
+    CornerFinder();
+    ~CornersFinder();
+
+    void init();
+    void spin();
+
+private:
+    ros::NodeHandle nh;
+
+};
