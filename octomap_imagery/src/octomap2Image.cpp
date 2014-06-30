@@ -19,6 +19,7 @@
 #include <opencv2/core/core.hpp>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <tf/transform_datatypes.h>
 
 // TF
 #include <tf/transform_listener.h>
@@ -185,7 +186,8 @@ int main (int argc, char** argv)
   // Fill Image msg (project octree onto camera plane)
   cv::Point3d ray;
   cv::Point2d uv_dst;
-  octomap::point3d origin (0,0,0), end;  // NEED TO UPDATE "origin" WITH TF FRAME
+  octomap::point3d end;  // NEED TO UPDATE "origin" WITH TF FRAME
+  tf::Vector3 origin (0,0,0);
   bool success;
   octomap::ColorOcTreeNode* node;
   unsigned short int color[3];
@@ -193,74 +195,62 @@ int main (int argc, char** argv)
 
   // Publish image
   ros::Publisher pub = nh.advertise<sensor_msgs::Image>("image", 5);  // topic name works with image_view without remapping!
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(100);
   std::cout << "Filling Image msg..." << std::endl;
+
+  // Transformer
+  tf::TransformListener listener;
+  bool can_transform;
+  string frame_old = "/map";
+  string frame_new = "/camera_rgb_optical_frame";
+  can_transform = listener.waitForTransform(frame_old, 
+					    frame_new,
+					    ros::Time(0), 
+					    ros::Duration(3.0));
+  if (!can_transform) 
+    {
+      std::cerr << "Could not transform! :-(" << std::endl;
+      return -1;
+    }
+  tf::StampedTransform tf;
+      
+  
+
   while (ros::ok())
     {
-      model_binned.fromCameraInfo(info_binned);  // update model (in case of TF updates)
+
+      // Look up transforms if necessary
+      if (has_tf)
+	{
+	  listener.lookupTransform(frame_new, 
+				   frame_old,
+				   ros::Time(0), 
+				   tf);
+	  std::cout << "Looked up transform from frame: " << frame_old << " to frame: " << frame_new << std::endl;
+	}
+      else
+	{
+	  tf.setIdentity();  // transform does nothing
+	}
+
       for (uv_dst.x = 0; uv_dst.x != image.width; uv_dst.x++)
 	{
 	  for (uv_dst.y = 0; uv_dst.y != image.height; uv_dst.y++)
 	    {
 	      //std::cout << "UV: (" << uv_dst.x << ", " << uv_dst.y << ")" << std::endl;
-	      ray = model_binned.projectPixelTo3dRay(uv_dst);
+	      ray = model_binned.projectPixelTo3dRay(uv_dst);  // outputs cv::Point3d
 	      //std::cout << "Ray: (" << ray.x << ", " << ray.y << ", " << ray.z << ")" << endl;
-	      octomap::point3d direction (ray.x, ray.y, ray.z);
+	      tf::Vector3 direction (ray.x, ray.y, ray.z);
 	      //std::cout << "Direction: (" << direction.x() << ", " << direction.y() << ", " << direction.z() << ")" << endl;
 
-	      // Do transforms if necessary
+	      // Do transforms
+	      tf::Vector3 origin_tf = tf * origin;
+	      tf::Vector3 direction_tf = tf * direction;
+	      octomap::point3d origin_final (origin_tf.x(), origin_tf.y(), origin_tf.z());
+	      octomap::point3d direction_final (direction_tf.x(), direction_tf.y(), direction_tf.z());
+	      
 
-	      if (has_tf) 
-		{
-		  std::string frame_old = "/map";
-		  std::string frame_new = "/camera_rgb_optical_frame";
-		  tf::TransformListener listener;
-		  bool can_transform = true;
-
-		  can_transform = listener.waitForTransform(frame_old, 
-							    frame_new,
-							    ros::Time(0), 
-							    ros::Duration(3.0));
-
-		  if (can_transform)
-		    {
-		      geometry_msgs::PointStamped origin_raw, origin_tf;
-		      origin_raw.header.frame_id = frame_old;
-		      origin_raw.point.x = origin.x();
-		      origin_raw.point.y = origin.y();
-		      origin_raw.point.z = origin.z();
-		      origin_raw.header.stamp = ros::Time(0);
-		      listener.transformPoint(frame_new, 
-					      origin_raw, 
-					      origin_tf);
-		      std::cout << "Origin point transformed to frame: " << frame_new << std::endl;
-		      octomap::point3d origin_final (origin_tf.point.x, origin_tf.point.y, origin_tf.point.z);
-
-		      geometry_msgs::Vector3Stamped direction_raw, direction_tf;
-		      direction_raw.header.frame_id = frame_old;
-		      direction_raw.vector.x = direction.x();
-		      direction_raw.vector.y = direction.y();
-		      direction_raw.vector.z = direction.z();
-		      direction_raw.header.stamp = ros::Time(0);
-		      listener.transformVector(frame_new, 
-					       direction_raw, 
-					       direction_tf);
-		      std::cout << "Direction point transformed to frame: " << frame_new << std::endl;
-		      octomap::point3d direction_final (direction_tf.vector.x, direction_tf.vector.y, direction_tf.vector.z);
-		      success = color_octree.castRay(origin_final, direction_final, end);  // stay in this scope since octomap::vector3d data is protected (can't define outside, then set inside scope)
-		    }
-		  else 
-		    {
-		      std::cerr << "Could not transform! :-(" << std::endl;
-		      return -1;
-		    }
-		  
-		}
-	      else
-		{
-		  success = color_octree.castRay(origin, direction, end);
-		}
-
+	      success = color_octree.castRay(origin_final, direction_final, end);
 	      
 	      if (success)
 		{
