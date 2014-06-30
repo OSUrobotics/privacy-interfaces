@@ -78,18 +78,21 @@ class marker:
 
 #This class censors objects according to the above manipulation types.
 class privacy:
-	def __init__(self, config, defaultManip=CONTROL, doRecord=False, image_topic="/camera/rgb/image_raw"):
+	def __init__(self, config, defaultManip=REDACT, doRecord=False, image_topic="/camera/rgb/image_color"):
 		#subscribe to image info to manipulate and camera_info to get the details needed to perform 
 		#3d position to 2d point projections.
+		self.image_topic = image_topic
 		self.image_sub = rospy.Subscriber(image_topic, Image, self.image_callback)
 		self.info_sub  = rospy.Subscriber("/camera/rgb/camera_info", CameraInfo, self.camera_callback)
 		self.marker_sub = rospy.Subscriber("pose_markers", PoseMarkers, self.marker_callback)
+
+		self.image_pub = rospy.Publisher("thing", Image)
 	
 		#store our record boolean and defaultManipulation style.
 		self.doRecord = doRecord
 		#incrementer for naming files.
 		self.inc = 1
-		
+
 		self.defaultManip = defaultManip
 		#bridge to convert the image to cvMAT.
 		self.bridge = CvBridge()
@@ -106,13 +109,13 @@ class privacy:
 	def image_callback(self, image):
 		#convert from a ROS Image message to a cvMAT image to a numpy array.
 		middleman = self.bridge.imgmsg_to_cv(image, "bgr8")
-		self.image = numpy.asarray(middleman)
+		self.image = numpy.array(middleman,  dtype=numpy.uint8)
 		
 		self.defaultManip = rospy.get_param('imageFilter/defaultManip', "REDACT")
 		#Find our markers and act on them.
 		try:
 	  		for myMarker in self.markers:
-				manipChoice = myMarker.manip
+	  			manipChoice = myMarker.manip
 				if manipChoice == REDACT:
 					self.redact(myMarker)
 				elif manipChoice == BLUR:
@@ -132,8 +135,8 @@ class privacy:
 			self.inc += 1
 
 		#SHOW ZE IMAGE!
-		cv2.imshow("canvas", self.image)
-		cv2.waitKey(3)
+		cv2.imshow(self.image_topic, self.image)
+		cv2.waitKey(1000)
 
 	#Just update camModel to use the most recent cameraInfo.
 	def camera_callback(self, cameraInfo):
@@ -150,9 +153,11 @@ class privacy:
 		#We will catch the first markers given to us and ALWAYS keep those until new ones arrive.
 		#This cures any "flashes" in displaying the markers, as we always have ones to display.
 		if markers.markers:
-			#an array that stores any caught markers.
 			self.markers = []
+			#an array that stores any caught markers.
 			for myMarker in markers.markers:
+				#STRIP SLASHES. If people name their frame test instead of /test and this is /test then everything is crappy.
+				myMarker.header.frame_id = myMarker.header.frame_id.replace("/", "")
 				#a safegaurd against the offsets csv and frames csv not being bijective.
 				if myMarker.header.frame_id in self.config:
 					#the marker's properties are in config already; if it's found, steal that data.
@@ -172,6 +177,7 @@ class privacy:
 	def redact(self, marker):
 		markerPoint = marker.getFirstPoint()
 		offsetPoint = marker.getSecondPoint()
+		marker.debug()
 
 		#cv2.putText(self.image, str(marker.position[0]), marker.positionToPoint(marker.position[0]),cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 255, 0))
 		#origin = self.positionToPoint((0, 0, marker.position[0][2]))
@@ -261,6 +267,8 @@ class privacy:
 			reader = csv.reader(csvfile, delimiter=',', quotechar="'")
 			for row in reader:
 				pattern = row[0]
+				#STRIP SLASHES because otherwise people screw up naming their frames.
+				pattern = pattern.replace("/", "")
 				if row[1] == "":
 					row[1] = self.defaultManip
 				manip = row[1]
