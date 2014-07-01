@@ -7,7 +7,8 @@ CornerFinder::~CornerFinder() {}
 void CornerFinder::init() 
 {
     // Create Subscribers
-    ros::Subscriber sub = nh.subscribe ("/camera/depth/points", 1, &CornerFinder::cloud_cb, this);
+    std::cout << "Subscribing to Point Cloud" << std::endl;
+    sub = nh.subscribe ("/camera/depth/points", 1, &CornerFinder::cloud_cb, this);
     // Create Publishers
     pub = nh.advertise<geometry_msgs::PointStamped> ("/output", 1);
     pub_plane_1 = nh.advertise<sensor_msgs::PointCloud2> ("/Plane_1", 1);
@@ -106,8 +107,8 @@ void CornerFinder::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
     // Create the segmentation object
     pcl::SACSegmentation<pcl::PointXYZ> seg;
-    // Set up the segementation object with a distance threshold of 0.1
-    set_segmentation_params(0.1, &seg);
+    // Set up the segementation object with a distance threshold of 0.01
+    set_segmentation_params(0.01, &seg);
 
     // Create floating point matricies to hold the coeficients
     arma::fmat plane_coefficients = arma::randu<arma::fmat>(3, 3);
@@ -156,6 +157,6 @@ int main (int argc, char** argv)
     ros::init (argc, argv, "corner_finder");
     CornerFinder corner_finder;
     corner_finder.init();
-
+    std::cout << "Ready to Recive messages" << std::endl;
     ros::spin ();
 }
