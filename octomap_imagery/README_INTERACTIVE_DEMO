@@ -1,0 +1,7 @@
+To run demo with interactive gaze control:
+$ roscore
+$ rosrun tf static_transform_publisher 0 0 0 0 0 0 /map /camera_rgb_optical_frame 100
+  [if tf frames don't exist yet] 
+$ rosrun octomap_imagery interactive_gaze_control.py /map /camera_rgb_optical_frame
+  [open RViz and switch fixed frame to /map and visualize InteractiveMarker and Image]
+$ rosrun octomap_imagery octomap2Image 0.02 10 1
