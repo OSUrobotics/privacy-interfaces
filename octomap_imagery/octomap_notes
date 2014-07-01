@@ -27,3 +27,4 @@ Next steps (ideas):
 - See how RGBDslam does color updating
 - Look into using RGBD_SLAM on PR2 head for localization+registration
 - Integrate with octomap_server
+- Fixed viewpoints with continuous rotation (a la Google Street View or Myst)
