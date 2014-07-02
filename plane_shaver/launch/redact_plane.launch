@@ -1,7 +1,7 @@
 <launch>
 
 	<!-- Launch rosbag -->
-	<node pkg="rosbag" type="play" name="player" output="screen" args="--loop --clock /home/ruebenm/workspaces/privacy_ws/src/plane_shaver/bags/my-desk.bag" />
+	<node pkg="rosbag" type="play" name="player" output="screen" args="--loop --clock /home/ruebenm/workspaces/privacy_ws/src/plane_shaver/bags/my-desk.bag"/>
 
 	<!-- Launch AR Tag tracker -->
 	<arg name="marker_size" default="4.4" />
