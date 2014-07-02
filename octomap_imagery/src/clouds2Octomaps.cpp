@@ -53,8 +53,6 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_in)
   color_octree.prune();
   color_octree.toMaxLikelihood();
 
-  octomap::OcTree octree = color_octree.deepCopy();
-
   octomap_msgs::Octomap octomap;
   octomap.header.stamp = ros::Time::now();
   octomap.header.frame_id = "/camera_rgb_optical_frame";
