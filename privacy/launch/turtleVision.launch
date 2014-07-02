@@ -1,0 +1,21 @@
+<launch>
+
+  <!--csv file that specifies locations of frames in 3d map. -->
+  <arg name="config" default="cornell" />
+  <arg name="framePrefix" default="$(find privacy)/config/frames/" />
+  <!--csv file that specifies the polygon surrounding frames -->
+  <arg name="polygonPrefix" default="$(find privacy)/config/polygons/"/>
+  <!--Image topic. The default image topic. Just an image topic.  -->
+   <arg name="image_topic" default="/camera/rgb/image_color"/>
+  
+<node name="republish" pkg="image_transport" type="republish" args="compressed in:=$(arg image_topic) out:=$(arg image_topic)_repub"></node>
+
+<!--Looks up transforms from the frames published by framePublisher to the camera's frame_id, then publishes
+these frames so that imageFilter.py can pick it up.  -->
+  <node name="turtleVision" pkg="privacy" type="turtleVision.py">
+    <param name="frameLocations" value="$(arg framePrefix)$(arg config).csv"/>
+    <param name="polygonLocations" value="$(arg polygonPrefix)$(arg config)/"/>
+    <param name="image_topic" value="$(arg image_topic)_repub"/>
+  </node>
+  
+</launch>
