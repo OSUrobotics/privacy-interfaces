@@ -209,8 +209,9 @@ int main (int argc, char** argv)
 					    ros::Duration(3.0));
   if (!can_transform) 
     {
-      std::cerr << "Could not transform! :-(" << std::endl;
-      return -1;
+      std::cout << "Could not transform!" << std::endl;
+      if (!has_tf) 
+	std::cout << "...but it's OK." << std::endl;
     }
   tf::StampedTransform tf;
       
