@@ -141,6 +141,21 @@ target_link_libraries(downsample_clouds
  )
 add_dependencies(downsample_clouds octomap_imagery_gencpp)
 
+add_executable(clouds2Octomaps src/clouds2Octomaps.cpp)
+target_link_libraries(clouds2Octomaps
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(clouds2Octomaps octomap_imagery_gencpp)
+
+add_executable(transform_clouds src/transform_clouds.cpp)
+target_link_libraries(transform_clouds
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(transform_clouds octomap_imagery_gencpp)
+
+
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(octomap_imagery_node octomap_imagery_generate_messages_cpp)
