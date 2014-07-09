@@ -50,6 +50,10 @@ flags=cv.CV_HAAR_SCALE_IMAGE)
 
 
 #IMAGE MANIPULATION FUNCTIONS
+	def redactPolygon(self, image, poly):
+		cv2.fillPoly(image,pts=[poly],color=(0,0,0))
+		return image
+
 	#takes a cv2 numpy array and two 2-tuples and creates a black box.
 	def redact(self, image, topLeft, bottomRight):
 		cv2.rectangle(image, topLeft, bottomRight, -1, -1)
