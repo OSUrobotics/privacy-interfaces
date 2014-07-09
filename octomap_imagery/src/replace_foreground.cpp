@@ -5,10 +5,13 @@
 // ROS stuff
 #include <ros/ros.h>
 #include <ros/package.h>
+#include <sensor_msgs/Image.h>
 
 // PCL stuff
 #include <pcl/point_cloud.h>
 #include <pcl/octree/octree.h>
+#include <pcl/conversions.h>
+#include <pcl/visualization/image_viewer.h>
 
 // for PCD file handling in particular
 #include <pcl/io/pcd_io.h>
@@ -78,6 +81,12 @@ int main (int argc, char** argv)
 
   std::cout << "Replaced those points!" << std::endl;
 
-  pcl::io::savePCDFileASCII (path + "test_foreground_replaced.pcd", *cloud_fore);
+
+  // Display filtered image
+  //sensor_msgs::Image image;
+  //pcl_ros::toROSMsg(*cloud_fore, image);
+  pcl::visualization::ImageViewer viewer ("Filtered Image");
+  viewer.showRGBImage(*cloud_fore);
+  viewer.spin();
 
 }
