@@ -15,6 +15,7 @@
 #include <pcl/conversions.h>
 #include <pcl/visualization/image_viewer.h>
 #include <pcl/io/openni_grabber.h>
+#include <pcl/filters/impl/filter_indices.hpp>
 
 // for PCD file handling in particular
 #include <pcl/io/pcd_io.h>
@@ -24,7 +25,7 @@
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
-
+#include <math.h>
 
 
 // Globals :-(
@@ -35,7 +36,43 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore;
 bool is_first_cloud = true;
 
 
-void replace_foreground (float resolution,
+void replace_indices (std::vector<int> indices,
+		      pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_back, 
+		      pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
+{
+  // Replace indexed foreground points with background points
+  std::cout << "Replacing this many points:" << indices.size() << std::endl;
+  for (size_t i = 0; i < indices.size (); ++i)
+    {
+      cloud_fore->points[indices[i]].r = cloud_back->points[indices[i]].r;
+      cloud_fore->points[indices[i]].g = cloud_back->points[indices[i]].g;
+      cloud_fore->points[indices[i]].b = cloud_back->points[indices[i]].b;
+      cloud_fore->points[indices[i]].x = cloud_back->points[indices[i]].x;
+      cloud_fore->points[indices[i]].y = cloud_back->points[indices[i]].y;
+      cloud_fore->points[indices[i]].z = cloud_back->points[indices[i]].z;
+    }
+
+  std::cout << "Replaced those points!" << std::endl;
+}
+
+
+void redact_indices(std::vector<int> indices,
+		      pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
+{
+  // Replace indexed points with BLACK
+  std::cout << "Redacting this many points:" << indices.size() << std::endl;
+  for (size_t i = 0; i < indices.size (); ++i)
+    {
+      cloud_fore->points[indices[i]].r = 0;
+      cloud_fore->points[indices[i]].g = 0;
+      cloud_fore->points[indices[i]].b = 0;
+    }
+
+  std::cout << "Redacted those points!" << std::endl;
+}
+
+
+std::vector<int> filter_foreground (float resolution,
 			 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_back, 
 			 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
 {
@@ -53,24 +90,29 @@ void replace_foreground (float resolution,
   octree.setInputCloud (cloud_fore);
   octree.addPointsFromInputCloud ();
 
-  std::vector<int> newPointIdxVector;
+  std::vector<int> indices_fore;
 
   // Get vector of point indices from octree voxels which did not exist in previous buffer
-  octree.getPointIndicesFromNewVoxels (newPointIdxVector);
+  octree.getPointIndicesFromNewVoxels (indices_fore);
 
-  // Replace foreground points with background points
-  std::cout << "Replacing this many points:" << newPointIdxVector.size() << std::endl;
-  for (size_t i = 0; i < newPointIdxVector.size (); ++i)
-    {
-      cloud_fore->points[newPointIdxVector[i]].r = cloud_back->points[newPointIdxVector[i]].r;
-      cloud_fore->points[newPointIdxVector[i]].g = cloud_back->points[newPointIdxVector[i]].g;
-      cloud_fore->points[newPointIdxVector[i]].b = cloud_back->points[newPointIdxVector[i]].b;
-      cloud_fore->points[newPointIdxVector[i]].x = cloud_back->points[newPointIdxVector[i]].x;
-      cloud_fore->points[newPointIdxVector[i]].y = cloud_back->points[newPointIdxVector[i]].y;
-      cloud_fore->points[newPointIdxVector[i]].z = cloud_back->points[newPointIdxVector[i]].z;
-    }
+  return indices_fore;
+}
 
-  std::cout << "Replaced those points!" << std::endl;
+
+std::vector<int> filter_nans (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
+{
+  std::vector<int> indices_nan;
+  //indices_nan.resize(cloud->size());  // pre-allocate space
+  int count = 0;
+  for (int i = 0; i < cloud->points.size(); ++i)
+    if (isnan(cloud->points[i].z))  // test if z-value is NaN
+      {
+	indices_nan.push_back(i);
+	count++;
+      }
+  //indices_nan.resize(count);  // shrink back down
+
+  return indices_nan;
 }
 
 
@@ -83,8 +125,11 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
       is_first_cloud = false;
       std::cout << "done!" << std::endl;
     }
-
-  replace_foreground(resolution, cloud_back, cloud_fore);
+  
+  std::vector<int> indices_fore = filter_foreground(resolution, cloud_back, cloud_fore);
+  std::vector<int> indices_nan = filter_nans(cloud_back);  // of BACKGROUND image!
+  replace_indices(indices_fore, cloud_back, cloud_fore);
+  replace_indices(indices_nan, cloud_back, cloud_fore);
 
   if (!viewer.wasStopped())
     viewer.showRGBImage(*cloud_fore);
