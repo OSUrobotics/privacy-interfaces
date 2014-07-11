@@ -57,7 +57,7 @@ void replace_indices (std::vector<int> indices,
 
 
 void redact_indices(std::vector<int> indices,
-		      pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
+		    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
 {
   // Replace indexed points with BLACK
   std::cout << "Redacting this many points:" << indices.size() << std::endl;
@@ -69,6 +69,33 @@ void redact_indices(std::vector<int> indices,
     }
 
   std::cout << "Redacted those points!" << std::endl;
+}
+
+
+void color_indices(int color,
+		   std::vector<int> indices,
+		   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
+{
+  // Parse 'color' input (0 = red, 1 = green, 2 = blue)
+  int r, g, b;
+  r = g = b = 0;
+  if (color == 0)
+    r = 1;
+  else if (color == 1)
+    g = 1;
+  else
+    b = 1;
+  
+  // Replace indexed points with color 
+  std::cout << "Coloring this many points:" << indices.size() << std::endl;
+  for (size_t i = 0; i < indices.size (); ++i)
+    {
+      cloud_fore->points[indices[i]].r *= r;
+      cloud_fore->points[indices[i]].g *= g;
+      cloud_fore->points[indices[i]].b *= b;
+    }
+
+  std::cout << "Colored those points!" << std::endl;
 }
 
 
@@ -128,7 +155,8 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
   
   std::vector<int> indices_fore = filter_foreground(resolution, cloud_back, cloud_fore);
   std::vector<int> indices_nan = filter_nans(cloud_back);  // of BACKGROUND image!
-  replace_indices(indices_fore, cloud_back, cloud_fore);
+  //replace_indices(indices_fore, cloud_back, cloud_fore);
+  color_indices(0, indices_fore, cloud_fore);
   replace_indices(indices_nan, cloud_back, cloud_fore);
 
   if (!viewer.wasStopped())
