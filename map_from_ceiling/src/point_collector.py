@@ -6,7 +6,7 @@ from geometry_msgs.msg import PointStamped
 from geometry_msgs.msg import Point
 from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker 
- 
+
 def is_within(a, b, tolerance):
 	return (a + tolerance > b) and (a - tolerance < b)
 
@@ -57,14 +57,12 @@ class Marker_object():
 		#self.marker.points = []
 
 	def add_point(self, point):
-		found_close_point = False
 		for point_cluster in self.clusters:
 			if point_cluster.is_close(point):
 				print "Found a close point"
 				point_cluster.add_point(point)
-				found_close_point = True
 				break;
-		if not found_close_point:
+		else found_close_point:
 			print "No close points"
 			self.clusters.append(Point_Cluster(point))
 		self.flush_clusters()
