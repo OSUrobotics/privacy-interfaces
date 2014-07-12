@@ -210,10 +210,13 @@ void CornerFinder::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     // Find the best planes
     for (int i=0; i<MAX_PLANES; i++)
     {
-        // Set up the segmentation object
-        seg.setInputCloud (cloud.makeShared());
-        // Run the segmentation
-        seg.segment(*inliers, coefficients); 
+        if (cloud.size() > 0) 
+        {
+            // Set up the segmentation object
+            seg.setInputCloud (cloud.makeShared());
+            // Run the segmentation
+            seg.segment(*inliers, coefficients); 
+        }
 
         if (inliers->indices.size () == 0)
         {

@@ -14,7 +14,7 @@
 // For linear algebra. Compile with -O1 -larmadillo
 #include <armadillo>
 
-#define MAX_PLANES 4
+#define MAX_PLANES 5
 
 class Corner : public geometry_msgs::PointStamped
 {
