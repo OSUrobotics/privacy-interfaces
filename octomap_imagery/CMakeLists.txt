@@ -155,6 +155,13 @@ target_link_libraries(transform_clouds
  )
 add_dependencies(transform_clouds octomap_imagery_gencpp)
 
+add_executable(replace_foreground src/replace_foreground.cpp)
+target_link_libraries(replace_foreground
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(replace_foreground octomap_imagery_gencpp)
+
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
