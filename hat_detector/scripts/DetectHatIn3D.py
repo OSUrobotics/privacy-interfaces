@@ -38,7 +38,8 @@ class DrawRect():
 	def blob_callback(self, blob):
 		if self.sync1_callback and self.sync2_callback and (blob.blob_count != 0):
 			bleb = self.FindBiggestBlob (blob)
-			z = self.image[bleb.y][bleb.x]
+			z = self.image[bleb.y][bleb.x]  # depth in mm
+			z /= 1000  # now in meters
 	
 			self.UVtoXYZ = PinholeCameraModel()
 			self.UVtoXYZ.fromCameraInfo(self.info)
@@ -46,6 +47,7 @@ class DrawRect():
 			vec = [x * (z/vec[2]) for x in vec]
 
 			self.P = PointStamped()
+			self.P.header.frame_id = self.info.header.frame_id
 			self.P.point.x = vec[0]
 			#the np make the downward direction positive direction,
 			#so we need to multiply to -1 to make upward direction
