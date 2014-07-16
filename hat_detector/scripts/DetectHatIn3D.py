@@ -15,8 +15,8 @@ import code
 class DrawRect():
 	def __init__(self, topic_image, topic_blob, topic_info, topic_out):
 		
-		self.sync1_callback = False #synchornize the image
-		self.sync2_callback = False #synchornize the camera info
+		self.sync1_callback = False #synchronize the image
+		self.sync2_callback = False #synchronize the camera info
 				
 		self.bridge = CvBridge()
 		rospy.Subscriber(topic_image, Image, self.image_callback)
