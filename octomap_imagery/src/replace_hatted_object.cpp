@@ -1,4 +1,5 @@
 // Replaces foreground stuff with background stuff, essentially preventing an image from changing.
+// Chooses which foreground thing to keep via green hat. 
 // Adapted from this tutorial: http://pointclouds.org/documentation/tutorials/octree_change.php
 // ...as well as this one: http://pointclouds.org/documentation/tutorials/openni_grabber.php
 // Matthew Rueben, Oregon State University
@@ -8,6 +9,7 @@
 #include <ros/package.h>
 #include <sensor_msgs/Image.h>
 #include <pcl_ros/point_cloud.h>  // allows subscribing/publishing PCL types as ROS msgs
+#include <geometry_msgs/PointStamped.h>
 
 // PCL stuff
 #include <pcl/point_cloud.h>
@@ -38,6 +40,7 @@ pcl::visualization::ImageViewer viewer_replaced ("Foreground? What foreground?")
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_back;
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore;
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_show;
+geometry_msgs::PointStamped::Ptr hat (new geometry_msgs::PointStamped ());
 bool is_first_cloud = true;
 
 
@@ -148,7 +151,8 @@ std::vector<int> filter_nans (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
 }
 
 std::vector<pcl::PointIndices> cluster_indices (std::vector<int> indices_fore,
-						pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
+						pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore,
+						pcl::PointCloud<pcl::PointXYZ>::Ptr points_clusters)
 {
   // Get cloud of foreground only
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr points_fore (new pcl::PointCloud<pcl::PointXYZRGB> ());
@@ -196,7 +200,7 @@ std::vector<pcl::PointIndices> cluster_indices (std::vector<int> indices_fore,
   // Cluster it!
   std::vector<pcl::PointIndices> clusters;
   pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-  ec.setClusterTolerance (0.05); // about two inches
+  ec.setClusterTolerance (0.10); // about four inches
   //ec.setMinClusterSize (100);
   //ec.setMaxClusterSize (480*640/2);
   ec.setSearchMethod (tree);
@@ -205,6 +209,14 @@ std::vector<pcl::PointIndices> cluster_indices (std::vector<int> indices_fore,
 
   std::cout << "Number of clusters: " << clusters.size() << std::endl;
   std::cout << "Taking largest cluster from now on." << std::endl;
+
+  // Get cluster centroids
+  for (std::vector<pcl::PointIndices>::iterator it = clusters.begin(); it != clusters.end(); ++it)
+    {
+      pcl::compute3DCentroid (*voxels_fore, it->indices, centroid);
+      point.getVector4fMap() = centroid;
+      points_clusters->push_back (point);
+    }
 
   // Make indices refer back to the full point cloud
   pcl::PointIndices cluster;  // temp
@@ -233,6 +245,19 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
       is_first_cloud = false;
       std::cout << "done!" << std::endl;
     }
+
+  else if (hat->point.z < 0.5 || hat->point.z > 2.75)  // filter hat locations
+    {
+      std::cout << "Hat point out of range! " << hat->point.z << std::endl;
+
+      // Display unaltered background
+      if (!viewer_replaced.wasStopped())
+	viewer_replaced.showRGBImage(*cloud_back);
+     
+      if (!viewer_highlight.wasStopped())
+	viewer_highlight.showRGBImage(*cloud_back);
+    }
+
   else
     {
       cloud_show = cloud_back->makeShared();
@@ -240,25 +265,50 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
       std::vector<int> indices_fore = filter_foreground(resolution, cloud_back, cloud_fore);
       std::vector<int> indices_nan = filter_nans(cloud_back);  // of BACKGROUND image!
 
-      std::vector<pcl::PointIndices> clusters = cluster_indices(indices_fore, cloud_fore);
+      pcl::PointCloud<pcl::PointXYZ>::Ptr points_clusters (new pcl::PointCloud<pcl::PointXYZ> ());
+      std::vector<pcl::PointIndices> clusters = cluster_indices(indices_fore, cloud_fore, points_clusters);
+      std::cout << "Just checking that number of clusters (" << clusters.size() << ") and number of cluster centers (" << points_clusters->size() << ") are the same." << std::endl;
 
+      // Find closest cluster to the hat
+      int closest = 0;
+      float min_dist = 100;
+      float dist = 100;
+      for (int i = 0; i != points_clusters->size(); ++i)
+	{
+	  dist = sqrt(pow((*points_clusters)[i].x - hat->point.x, 2) + 
+		      pow((*points_clusters)[i].y - hat->point.y, 2) + 
+		      pow((*points_clusters)[i].z - hat->point.z, 2));
+	  if (dist < min_dist)
+	    {
+	      min_dist = dist;
+	      closest = i;
+	    }
+	}
+      std::cout << "Closest cluster to hat is " << min_dist << "m away from hat." << std::endl;
+	  
       // Project biggest cluster onto background image
-      replace_indices(clusters[0].indices, cloud_fore, cloud_show);
+      replace_indices(clusters[closest].indices, cloud_fore, cloud_show);
       //replace_indices(indices_nan, cloud_back, cloud_fore);  // replace the NaNs, too
       if (!viewer_replaced.wasStopped())
-      	viewer_replaced.showRGBImage(*cloud_show);
-
+	viewer_replaced.showRGBImage(*cloud_show);
+      
       // Highlight what we've kept
-      color_indices(1, clusters[0].indices, cloud_fore);
+      color_indices(1, clusters[closest].indices, cloud_fore);
       //color_indices(0, clusters[1].indices, cloud_fore);
       
       if (!viewer_highlight.wasStopped())
-        viewer_highlight.showRGBImage(*cloud_fore);
+	viewer_highlight.showRGBImage(*cloud_fore);
+      
     }
 
   std::cout << std::endl;  // for sanity's sake
 }
 
+
+void hat_callback (geometry_msgs::PointStamped::Ptr hat_in)
+{
+  *hat = *hat_in;
+}
 
 int main (int argc, char** argv)
 {
@@ -273,8 +323,10 @@ int main (int argc, char** argv)
       std::cerr << "Provide the octree resolution as an argument!" << std::endl;
       return -1;
     }
+
+  ros::Subscriber sub_hat = node.subscribe ("center_of_hat", 10, hat_callback);
   
-  ros::Subscriber sub = node.subscribe("cloud_in", 5, cloud_callback);
+  ros::Subscriber sub_cloud = node.subscribe ("cloud_in", 5, cloud_callback);
 
   ros::spin();
   
