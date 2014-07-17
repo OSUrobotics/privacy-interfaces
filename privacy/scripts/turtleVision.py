@@ -11,7 +11,6 @@ import tf
 
 
 from rosCV import rosCV as rcv
-
 class turtleViz():
 	def __init__(self, topic):
 		self.camModel = PinholeCameraModel()
@@ -24,12 +23,18 @@ class turtleViz():
 		self.pub = rospy.Publisher('turtleVision', Image)
 
 	def camera_callback(self, cameraInfo):
-		self.cameraInfo = cameraInfo
-		self.camModel.fromCameraInfo(cameraInfo)
-		# if not self.haveCamera:
-		# #we update our camModel with the cameraInfo to work some magic.
-		#     self.camModel.fromCameraInfo(cameraInfo)
-		#     self.haveCamera = True
+		if not self.haveCamera:
+			#we update our camModel with the cameraInfo to work some magic.
+			self.cameraInfo = cameraInfo
+			self.camModel.fromCameraInfo(cameraInfo)
+			self.haveCamera = True
+	def turnAround(self):
+		command = Twist()
+		command.angular.z = 0.5
+		now = rospy.Time.now()
+
+		while rospy.Time.now() - now < 2:
+			self.pub.publish(command)
 
 	def image_callback(self, image_in):
 		frameLocations = "/nfs/attic/smartw/users/reume02/catkin_ws/src/privacy-interfaces/privacy/config/frames/newThing.csv"
@@ -38,6 +43,7 @@ class turtleViz():
 			for row in reader:
 				newMarker = PoseStamped()
 				newMarker.header.frame_id = row[1]
+				newMarker.header.stamp = rospy.Time(0)
 				newMarker.pose.position.x = float(row[2])
 				newMarker.pose.position.y = float(row[3])
 				newMarker.pose.position.z = float(row[4])
@@ -46,32 +52,49 @@ class turtleViz():
 				newMarker.pose.orientation.y = 0.0
 				newMarker.pose.orientation.z = 0.0
 				newMarker.pose.orientation.w = 0.0
+
 		# Import and convert
 		image_cv2 = self.rcv.toCv2(image_in)
 		try:
-			# newPose = self.listener.transformPose(self.cameraInfo.header.frame_id, newMarker)
-			newPose = self.listener.transformPose('/cam_pos', newMarker)
-			position = (newPose.pose.position.x, newPose.pose.position.y, newPose.pose.position.z)
-			projected = self.camModel.project3dToPixel(position)
-			rospy.logdebug(projected)
-			x = int(projected[0])
-			y = int(projected[1])
+			now = rospy.Time.now()
+			# self.listener.waitForTransform(self.cameraInfo.header.frame_id, newMarker.header.frame_id, rospy.Time(0), rospy.Duration(1.0))
+			newMarker.header.stamp = rospy.Time(0)
+			newPose = self.listener.transformPose(self.cameraInfo.header.frame_id, newMarker)
+			rospy.logdebug("transform succeeded!")
 
-			image_cv2 = self.rcv.redact(image_cv2, (x,y), (x+50,y+50))
+			pos0 = (newPose.pose.position.x, newPose.pose.position.y, newPose.pose.position.z)
+			proj0 = self.camModel.project3dToPixel(pos0)
+			x0 = int(proj0[0])
+			y0 = int(proj0[1])
+
+			pos1 = (newPose.pose.position.x+0.5, newPose.pose.position.y, newPose.pose.position.z)
+			proj1 = self.camModel.project3dToPixel(pos1)
+			x1 = int(proj1[0])
+			y1 = int(proj1[1])
+
+			pos2 = (newPose.pose.position.x+0.25, newPose.pose.position.y+0.2, newPose.pose.position.z + 0.4)
+			proj2 = self.camModel.project3dToPixel(pos2)
+			x2 = int(proj2[0])
+			y2 = int(proj2[1])
+
+			self.poly = numpy.array( [ [x0,y0], [x1,y1], [x2,y2] ] )
+
+			# image_cv2 = self.rcv.redact(image_cv2, (x,y), (x+50,y+50))
 			# Convert back to ROS Image msg
-			image_out = self.rcv.toRos(image_cv2)
-			self.pub.publish(image_out)
-		# except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, AttributeError):
-		except ():
+		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, AttributeError):
+		# except ():
 			rospy.logdebug("transform failed")
 			# pass
-		self.rcv.imshow(image_cv2)
+		cv2.fillConvexPoly(image_cv2, self.poly, -1)
+		image_out = self.rcv.toRos(image_cv2)
+		self.pub.publish(image_out)
+		# self.rcv.imshow(image_cv2)
 
 
 if __name__ == '__main__':
 
 	rospy.init_node('turtleVision', log_level=rospy.DEBUG)
 
-	tv = turtleViz('/camera/rgb/image_color')
+	tv = turtleViz('/camera/rgb/image_color_repub')
 
 	rospy.spin()

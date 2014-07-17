@@ -14,7 +14,7 @@ import tf
 #it basically publishes frames of our desired objects relative to /map so that they can 
 #MAIN -----------------------------------------------------------------------------------
 if __name__ == '__main__':
-	rospy.init_node('framePublisher', log_level=rospy.DEBUG)
+	rospy.init_node('startFrame', log_level=rospy.DEBUG)
 	
 	broadcaster = tf.TransformBroadcaster()
 	while not rospy.is_shutdown():
