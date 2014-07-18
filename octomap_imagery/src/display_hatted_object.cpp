@@ -250,17 +250,17 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
     {
       std::cout << "Hat point out of range! " << hat->point.z << std::endl;
 
-      // Display unaltered foreground
+      // Display unaltered background
       if (!viewer_replaced.wasStopped())
-	viewer_replaced.showRGBImage(*cloud_fore);
+	viewer_replaced.showRGBImage(*cloud_back);
      
       if (!viewer_highlight.wasStopped())
-	viewer_highlight.showRGBImage(*cloud_fore);
+	viewer_highlight.showRGBImage(*cloud_back);
     }
 
   else
     {
-      cloud_show = cloud_fore->makeShared();
+      cloud_show = cloud_back->makeShared();
       
       std::vector<int> indices_fore = filter_foreground(resolution, cloud_back, cloud_fore);
       std::vector<int> indices_nan = filter_nans(cloud_back);  // of BACKGROUND image!
@@ -286,13 +286,13 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_fore)
 	}
       std::cout << "Closest cluster to hat is " << min_dist << "m away from hat." << std::endl;
 	  
-      // Remove biggest cluster from foreground image
-      replace_indices(clusters[closest].indices, cloud_back, cloud_show);
+      // Project biggest cluster onto background image
+      replace_indices(clusters[closest].indices, cloud_fore, cloud_show);
       //replace_indices(indices_nan, cloud_back, cloud_fore);  // replace the NaNs, too
       if (!viewer_replaced.wasStopped())
 	viewer_replaced.showRGBImage(*cloud_show);
       
-      // Highlight what we've erased
+      // Highlight what we've kept
       color_indices(1, clusters[closest].indices, cloud_fore);
       //color_indices(0, clusters[1].indices, cloud_fore);
       
@@ -312,7 +312,7 @@ void hat_callback (geometry_msgs::PointStamped::Ptr hat_in)
 
 int main (int argc, char** argv)
 {
-  ros::init(argc, argv, "replace_hatted_object");
+  ros::init(argc, argv, "display_hatted_object");
   ros::NodeHandle node;
 
   // Octree resolution - side length of octree voxels

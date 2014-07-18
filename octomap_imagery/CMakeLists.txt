@@ -162,6 +162,13 @@ target_link_libraries(replace_foreground
  )
 add_dependencies(replace_foreground octomap_imagery_gencpp)
 
+add_executable(display_hatted_object src/display_hatted_object.cpp)
+target_link_libraries(display_hatted_object
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(display_hatted_object octomap_imagery_gencpp)
+
 add_executable(replace_hatted_object src/replace_hatted_object.cpp)
 target_link_libraries(replace_hatted_object
   ${PCL_LIBRARIES}  
