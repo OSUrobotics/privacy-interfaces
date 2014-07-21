@@ -2,11 +2,13 @@
 <package>
   <name>octomap_imagery</name>
   <version>0.0.0</version>
-  <description>The octomap_imagery package</description>
+  <description>
+    Implements privacy filters for RGB-D image feeds, especially using Octrees to keep track of 3D color information about the environment. 
+  </description>
 
   <maintainer email="ruebenm@onid.oregonstate.edu">ruebenm</maintainer>
 
-  <license>TODO</license>
+  <license>MIT</license>
 
 
   <buildtool_depend>catkin</buildtool_depend>
