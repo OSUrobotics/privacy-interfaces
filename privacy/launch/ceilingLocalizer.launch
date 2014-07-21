@@ -9,9 +9,12 @@
   <!-- Camera info topic. -->
   <arg name="camera_topic" default="$(arg cameraPrefix)/rgb/camera_info"/>
 
+  <arg name="robot_depth" default="2.289175"/>
+
   <node name="ceilingLocalizer" pkg="privacy" type="ceilingLocalizer.py">
     <param name="image_topic" value="$(arg image_topic)"/>
     <param name="camera_topic" value="$(arg camera_topic)"/>
+    <param name="robot_depth" value="$(arg robot_depth)"/>
   </node>
 
   <!-- Publishes the transform between marker and base_footprint. -->

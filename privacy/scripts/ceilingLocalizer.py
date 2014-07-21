@@ -18,22 +18,22 @@ from rosCV import rosCV as rcv
 
 
 class ceilingLocalizer():
-	def __init__(self, topic, color):
+	def __init__(self, image_topic, camera_topic, robot_depth):
 
 		# A subscriber to the image topic
-		rospy.Subscriber(topic, Image, self.image_callback)
+		rospy.Subscriber(image_topic, Image, self.image_callback)
 
 		# To get which frame is the camera frame
-		rospy.Subscriber("/ceiling/rgb/camera_info", CameraInfo, self.camera_callback)
+		rospy.Subscriber(camera_topic, CameraInfo, self.camera_callback)
 
 		# To make the pixel to vector projection
 		self.camModel = PinholeCameraModel()
 
+		# How far is the robot plane from the camera?
+		self.robot_depth = robot_depth
+
 		# Alex's image stuff?
 		self.rcv = rcv()
-
-		# Publish the robots pose
-		self.posePub = rospy.Publisher("pose", PoseStamped)
 
 		# Publish frames to tf
 		self.broadcaster = tf.TransformBroadcaster()
@@ -94,7 +94,7 @@ class ceilingLocalizer():
 		cv2.circle(image_cv2,(midx,midy), 10, (0,255,0),cv2.cv.CV_FILLED,8,0)
 
 		# The adjacent side of our triangle (from kinect to floor minus turtlebot height)
-		adjacent = 2.289175
+		adjacent = self.robot_depth
 
 		[vx,vy,vz] = self.camModel.projectPixelTo3dRay((midx,midy))
 		marker_depth = adjacent / vz
@@ -112,22 +112,6 @@ class ceilingLocalizer():
 
 		# Broadcast the frame to tf
 		self.broadcaster.sendTransform((x,y,z), quaternion, rospy.Time.now(), "base_top", ceiling_optical_frame)
-
-		#ox
-		#oy
-		#oz
-		#ow
-		
-		#print(currentPose)
-		#print(vx,vy,vz)
-		#theta = math.acos(vz)
-		#print theta
-		#opposite = math.tan(theta) * adjacent
-		#hypotenuse = math.sqrt(math.pow(adjacent,2) + math.pow(opposite,2))
-		#print hypotenuse
-
-		#print(self.camModel.projectPixelTo3dRay(((image_cv2.shape[1]/2),(image_cv2.shape[0]/2))))
-
 
 		# Show all the images
 		cv2.imshow('mask_red', mask_red_out)
@@ -149,9 +133,10 @@ class ceilingLocalizer():
 if __name__ == '__main__':
 
 	rospy.init_node('ceilingLocalizer', log_level=rospy.DEBUG)
-	topic = rospy.get_param('ceilingLocalizer/image_topic', "/ceiling/rgb/image_color")
-	color = rospy.get_param('ceilingLocalizer/color', "RED")
+	image_topic = rospy.get_param('ceilingLocalizer/image_topic', "/ceiling/rgb/image_color")
+	camera_topic = rospy.get_param('ceilingLocalizer/camera_topic', "RED")
+	robot_depth = rospy.get_param('ceilingLocalizer/robot_depth', 2.289175)
 
-	cf = ceilingLocalizer(topic, color)
+	cf = ceilingLocalizer(image_topic, camera_topic, robot_depth)
 
 	rospy.spin()
