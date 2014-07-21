@@ -10,7 +10,7 @@ import csv
 import cv, cv2
 import numpy
 import tf
-
+from scipy.spatial import ConvexHull
 
 from rosCV import rosCV as rcv
 
@@ -87,9 +87,21 @@ class turtleViz():
 						polygon.polygon.points.append(Point32(transformedPolyPoint.point.x, transformedPolyPoint.point.y, transformedPolyPoint.point.z))
 					except():
 						pass
-				pointArray = numpy.asarray(polyPoints, numpy.int32)
+
+				#rospy.loginfo(polyPoints)
+
+
+				#pointArray = numpy.asarray(polyPoints, numpy.int32)
 				# Only draw the shape if it has more than 2 points
-				if len(pointArray) > 2:
+				if len(polyPoints) > 2:
+
+					hullPoints = self.convexHull(polyPoints)
+					pointArray = numpy.asarray(hullPoints, numpy.int32)
+					#pointArray2 = numpy.asarray(polyPoints, numpy.int32)
+
+					rospy.loginfo(pointArray)
+					#rospy.loginfo(pointArray2)
+					
 					image_cv2 = self.rcv.redactPolygon(image_cv2, pointArray)
 		
 			# For rviz
@@ -99,6 +111,14 @@ class turtleViz():
 		image_out = self.rcv.toRos(image_cv2)
 		self.pub.publish(image_out)
 		self.rcv.imshow(image_cv2)
+
+
+	# Get the convex hull of a set of points
+	def convexHull(self, points):
+		cv = ConvexHull(points)
+		hull_indices = cv.vertices
+		hull_points = [points[i] for i in hull_indices]
+		return hull_points
 
 
 if __name__ == '__main__':
