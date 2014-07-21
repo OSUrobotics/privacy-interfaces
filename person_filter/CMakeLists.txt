@@ -7,6 +7,7 @@ project(person_filter)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -43,12 +44,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
-
+add_message_files(
+  FILES
+  SkeletonJoint.msg
+  Skeleton.msg
+)
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
@@ -64,10 +64,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  person_filter
+  std_msgs  # Or other packages containing msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -81,7 +82,9 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES person_filter
-#  CATKIN_DEPENDS roscpp rospy
+  CATKIN_DEPENDS 
+  message_runtime 
+  std_msgs
 #  DEPENDS system_lib
 )
 
