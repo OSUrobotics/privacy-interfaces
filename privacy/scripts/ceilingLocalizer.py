@@ -41,6 +41,7 @@ class ceilingLocalizer():
 	def camera_callback(self, cameraInfo):
 		self.cameraInfo = cameraInfo
 		self.camModel.fromCameraInfo(cameraInfo)
+		self.cameraFrame = self.camModel.tfFrame()
 
 	def image_callback(self, image_in):
 		image_cv2 = self.rcv.toCv2(image_in)
@@ -108,10 +109,8 @@ class ceilingLocalizer():
 		yaw = math.atan2((fronty-backy), (frontx-backx))
 		quaternion = tf.transformations.quaternion_from_euler(0.0,0.0,yaw, axes='sxyz')
 
-		ceiling_optical_frame = "ceiling_rgb_optical_frame"
-
 		# Broadcast the frame to tf
-		self.broadcaster.sendTransform((x,y,z), quaternion, rospy.Time.now(), "base_top", ceiling_optical_frame)
+		self.broadcaster.sendTransform((x,y,z), quaternion, rospy.Time.now(), "base_top", self.cameraFrame)
 
 		# Show all the images
 		cv2.imshow('mask_red', mask_red_out)
