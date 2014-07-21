@@ -54,6 +54,13 @@ void CornerFinder::extract_inliers(pcl::PointCloud<pcl::PointXYZ>* original_pc, 
     original_pc->swap(cloud_no_plane);
 }
 
+bool CornerFinder::is_paralell_planes(float a1, float b1, float c1, float a2, float b2, float c2)
+{
+    float threshold = 0.07;
+    return (((b1/a1 + threshold) > b2/a2) && ((b1/a1 - threshold) < b2/a2)) &&
+           (((c1/a1 + threshold) > c2/a2) && ((c1/a1 - threshold) < c2/a2));
+}
+
 void CornerFinder::publish_plane(pcl::PointCloud<pcl::PointXYZ>* to_publish, int publisher_index) 
 {
     sensor_msgs::PointCloud2 message;    
@@ -90,6 +97,92 @@ void CornerFinder::publish_corner(arma::fmat* plane_coefficients, arma::fmat* pl
     pub.publish(corner_point);
 }
 
+void CornerFinder::find_corners(arma::fmat all_coefficients, arma::fmat all_intersections)
+{
+    arma::fmat plane_coefficents = arma::randu<arma::fmat>(3, 3);
+    arma::fmat plane_intersections = arma::randu<arma::fmat>(3, 1);
+
+    std::cout << "Finding corners from " << MAX_PLANES << " planes" << std::endl;
+
+    for(int i=0; i<(MAX_PLANES-2); i++) 
+    {
+        if (isnan(all_intersections(i, 0)))
+        {
+            std::cout << "[i= " << i << "Plane " << i << " is not a plane" << std::endl;
+            break;
+        }
+        std::cout << "[i=" << i << "] Putting plane " << i << " into coefficients matrix" << std::endl;
+        plane_coefficents(0, 0) = all_coefficients(i, 0);
+        plane_coefficents(0, 1) = all_coefficients(i, 1);
+        plane_coefficents(0, 2) = all_coefficients(i, 2);
+        plane_intersections(0, 0) = all_intersections(i, 0);
+        for (int j=1; j<(MAX_PLANES-1); j++) 
+        {
+            if (isnan(all_intersections(j, 0))) 
+            {
+                std::cout << "[i=" << i << " j=" << j << "] Plane " << j << " is not a plane" << std::endl;
+                break;
+            }
+            if (i == j) {}
+            else if (is_paralell_planes(plane_coefficents(0, 0), 
+                                  plane_coefficents(0, 1),
+                                  plane_coefficents(0, 2), 
+                                  all_coefficients(j, 0),
+                                  all_coefficients(j, 1),
+                                  all_coefficients(j, 2)))
+            {
+                std::cout << "[i=" << i << " j=" << j << "] Plane " << j << " is parallel to plane " << i << std::endl;
+            } 
+            else 
+            {
+                std::cout << "[i=" << i << " j=" << j << "] Putting plane " << j << " into coefficients matrix" << std::endl;
+                plane_coefficents(1, 0) = all_coefficients(j, 0);
+                plane_coefficents(1, 1) = all_coefficients(j, 1);
+                plane_coefficents(1, 2) = all_coefficients(j, 2);
+                plane_intersections(1, 0) = all_intersections(j, 0);
+                for (int k=2; k<MAX_PLANES; k++) 
+                {
+                    if (isnan(all_intersections(k, 0)))
+                    {
+                        std::cout << "[i=" << i << " j=" << j << " k=" << k << "] Plane " << k << " is not a plane" << std::endl;
+                        break;
+                    }
+                    if (j == i || j == k) {}
+                    else if (is_paralell_planes(plane_coefficents(0, 0),
+                                           plane_coefficents(0, 1),
+                                           plane_coefficents(0, 2),
+                                           all_coefficients(k, 0),
+                                           all_coefficients(k, 1),
+                                           all_coefficients(k, 2)))
+                    {
+                        std::cout << "[i=" << i << " j=" << j << " k=" << k << "] Plane " << k << " is parallel to plane " << i << std::endl;
+                    }
+                    else if (is_paralell_planes(plane_coefficents(1, 0),
+                                           plane_coefficents(1, 1),
+                                           plane_coefficents(1, 2),
+                                           all_coefficients(k, 0),
+                                           all_coefficients(k, 1),
+                                           all_coefficients(k, 2)))
+                    {
+                        std::cout << "[i=" << i << " j=" << j << " k=" << k << "] Plane " << k << "is parallel to plane " << j << std::endl;
+                    }
+                    else 
+                    {
+                        std::cout << "[i=" << i << " j=" << j << " k=" << k << "] Putting plane " << k << "into coefficients matrix" << std::endl;
+                        plane_coefficents(2, 0) = all_coefficients(k, 0);
+                        plane_coefficents(2, 1) = all_coefficients(k, 1);
+                        plane_coefficents(2, 2) = all_coefficients(k, 2);
+                        plane_intersections(2, 0) = all_intersections(k, 0);
+                        
+                        std::cout << "Finding corner between planes " << i << ", " << j << ", " << k << std::endl;
+                        publish_corner(&plane_coefficents, &plane_intersections);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void CornerFinder::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 {
     // Convert the sensor_msgs/PointCloud2 data to pcl/PointCloud
@@ -111,21 +204,24 @@ void CornerFinder::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     set_segmentation_params(0.01, &seg);
 
     // Create floating point matricies to hold the coeficients
-    arma::fmat plane_coefficients = arma::randu<arma::fmat>(3, 3);
-    arma::fmat plane_intersections = arma::randu<arma::fmat>(3, 1);
+    arma::fmat plane_coefficients = arma::randu<arma::fmat>(MAX_PLANES, 3);
+    arma::fmat plane_intersections = arma::randu<arma::fmat>(MAX_PLANES, 1);
 
-    // Find the best three planes
-    for (int i=0; i<3; i++)
+    // Find the best planes
+    for (int i=0; i<MAX_PLANES; i++)
     {
-        // Set up the segmentation object
-        seg.setInputCloud (cloud.makeShared());
-        // Run the segmentation
-        seg.segment(*inliers, coefficients); 
+        if (cloud.size() > 0) 
+        {
+            // Set up the segmentation object
+            seg.setInputCloud (cloud.makeShared());
+            // Run the segmentation
+            seg.segment(*inliers, coefficients); 
+        }
 
         if (inliers->indices.size () == 0)
         {
             std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
-            return;
+            // The coefficients remain the same
         }
 
         // convert the coeficents to a ROS message
@@ -141,11 +237,12 @@ void CornerFinder::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
         plane_intersections(i, 0) = -coefficients.values[3];
 
         extract_inliers(&cloud, inliers, &plane);
-        publish_plane(&plane, i);
+        // publish_plane(&plane, i);
     }
 
     // find and publish the corner
-    publish_corner(&plane_coefficients, &plane_intersections);
+    // publish_corner(&plane_coefficients, &plane_intersections);
+    find_corners(plane_coefficients, plane_intersections);
 
     std::cout << std::endl;
 }

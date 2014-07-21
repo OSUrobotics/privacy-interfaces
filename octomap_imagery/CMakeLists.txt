@@ -134,6 +134,49 @@ target_link_libraries(octomap2Image
  )
 add_dependencies(octomap2Image octomap_imagery_gencpp)
 
+add_executable(downsample_clouds src/downsample_clouds.cpp)
+target_link_libraries(downsample_clouds
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(downsample_clouds octomap_imagery_gencpp)
+
+add_executable(clouds2Octomaps src/clouds2Octomaps.cpp)
+target_link_libraries(clouds2Octomaps
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(clouds2Octomaps octomap_imagery_gencpp)
+
+add_executable(transform_clouds src/transform_clouds.cpp)
+target_link_libraries(transform_clouds
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(transform_clouds octomap_imagery_gencpp)
+
+add_executable(replace_foreground src/replace_foreground.cpp)
+target_link_libraries(replace_foreground
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(replace_foreground octomap_imagery_gencpp)
+
+add_executable(display_hatted_object src/display_hatted_object.cpp)
+target_link_libraries(display_hatted_object
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(display_hatted_object octomap_imagery_gencpp)
+
+add_executable(replace_hatted_object src/replace_hatted_object.cpp)
+target_link_libraries(replace_hatted_object
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(replace_hatted_object octomap_imagery_gencpp)
+
+
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(octomap_imagery_node octomap_imagery_generate_messages_cpp)

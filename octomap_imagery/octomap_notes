@@ -28,3 +28,10 @@ Next steps (ideas):
 - Look into using RGBD_SLAM on PR2 head for localization+registration
 - Integrate with octomap_server
 - Fixed viewpoints with continuous rotation (a la Google Street View or Myst)
+- Debug the thing where ray casting fails as viewpoint changes
+
+Next demo:
+PR2 looking at a whiteboard. One or two markers (e.g. AR tags,
+post-its) are used to indicate the private area, which we redact using
+the octree. Perhaps full res everywhere when not filtering, low res
+everywhere when we are. 
