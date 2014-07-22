@@ -48,7 +48,8 @@ add_message_files(
   FILES
   SkeletonJoint.msg
   Skeleton.msg
-)
+  SkeletonArray.msg)
+
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
