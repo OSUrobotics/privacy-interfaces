@@ -32,8 +32,10 @@ def recite_joints(suffix=''):
 def build_joint(joint_name, child_joints, parent_frame, listener):
     """ Build a single joint in XYZ space using a tf listener. """
     # Get the transform
-    listener.waitForTransform(joint_name, parent_frame, rospy.Time(0), rospy.Duration(1.0))
-    transform = listener.lookupTransform(joint_name, parent_frame, rospy.Time(0))
+    #listener.waitForTransform(joint_name, parent_frame, rospy.Time(0), rospy.Duration(1.0))
+    #transform = listener.lookupTransform(joint_name, parent_frame, rospy.Time(0))
+    listener.waitForTransform(parent_frame, joint_name, rospy.Time(0), rospy.Duration(1.0))
+    transform = listener.lookupTransform(parent_frame, joint_name, rospy.Time(0))
 
     # Build the msg
     joint = SkeletonJoint()
@@ -76,10 +78,10 @@ if __name__ == "__main__":
 
     # Publisher for joint positions
     pub = rospy.Publisher('/skeletons', SkeletonArray)
-    skeleton_array = SkeletonArray()
     
     r = rospy.Rate(10)
     while not rospy.is_shutdown():
+        skeleton_array = SkeletonArray()  # clear skeleton array
         frames = listener.getFrameStrings()
         joints_all = []
         for n in range(1,10):
@@ -94,8 +96,10 @@ if __name__ == "__main__":
         transforms_all = []
         for joints in joints_all:
             skeleton = Skeleton()  # clear skeleton
-            build_skeleton(joints, 'camera_rgb_optical_frame', listener, skeleton)
+            build_skeleton(joints, '/camera_rgb_optical_frame', listener, skeleton)
             skeleton_array.skeletons.append(skeleton)
 
+        skeleton_array.header.frame_id = '/camera_rgb_optical_frame'
+        skeleton_array.header.stamp = rospy.Time.now()
         pub.publish(skeleton_array)
         r.sleep()
