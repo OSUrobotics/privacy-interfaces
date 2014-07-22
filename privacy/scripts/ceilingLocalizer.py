@@ -41,7 +41,7 @@ class ceilingLocalizer():
 	def camera_callback(self, cameraInfo):
 		self.cameraInfo = cameraInfo
 		self.camModel.fromCameraInfo(cameraInfo)
-		self.cameraFrame = self.camModel.tfFrame()
+		self.cameraFrame = cameraInfo.header.frame_id
 
 	def image_callback(self, image_in):
 		image_cv2 = self.rcv.toCv2(image_in)
@@ -92,7 +92,8 @@ class ceilingLocalizer():
 		uvx = (frontx-backx) / distance
 		uvy = (fronty-backy) / distance
 
-		cv2.circle(image_cv2,(midx,midy), 10, (0,255,0),cv2.cv.CV_FILLED,8,0)
+		cv2.line(image_cv2, (frontx, fronty), (backx, backy), (0,255,0), 5)
+		#cv2.circle(image_cv2,(midx,midy), 10, (0,255,0),cv2.cv.CV_FILLED,8,0)
 
 		# The adjacent side of our triangle (from kinect to floor minus turtlebot height)
 		adjacent = self.robot_depth
@@ -133,7 +134,7 @@ if __name__ == '__main__':
 
 	rospy.init_node('ceilingLocalizer', log_level=rospy.DEBUG)
 	image_topic = rospy.get_param('ceilingLocalizer/image_topic', "/ceiling/rgb/image_color")
-	camera_topic = rospy.get_param('ceilingLocalizer/camera_topic', "RED")
+	camera_topic = rospy.get_param('ceilingLocalizer/camera_topic', "/ceiling/rgb/camera_info")
 	robot_depth = rospy.get_param('ceilingLocalizer/robot_depth', 2.289175)
 
 	cf = ceilingLocalizer(image_topic, camera_topic, robot_depth)
