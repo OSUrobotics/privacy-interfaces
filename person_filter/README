@@ -1,0 +1,7 @@
+How to run stuff correctly (follow CAREFULLY!):
+
+roscore
+rosparam set use_sim_time true
+rosrun tf static_transform_publisher 0 0 0 0 0 0 'camera_depth_frame' 'openni_depth_frame' 1.0
+rosbag play --clock --loop person_filter/bags/skeleton_short.bag
+rosrun person_filter skeleton_publisher.py
