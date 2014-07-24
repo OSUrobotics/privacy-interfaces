@@ -1,20 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(octomap_imagery)
+project(hat_detector)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(PCL REQUIRED)
-
 find_package(catkin REQUIRED COMPONENTS
-#  octomap
-#  octomap_mapping
-  octomap_msgs
-  octomap_ros
   roscpp
-  pcl_conversions
-  pcl_ros
-  image_geometry
+  rospy
 )
 
 ## System dependencies are found with CMake's conventions
@@ -74,7 +66,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   octomap_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ###################################
@@ -88,8 +80,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES octomap_imagery
-CATKIN_DEPENDS octomap_msgs #octomap octomap_mapping octomap_ros roscpp
+#  LIBRARIES hat_detector
+#  CATKIN_DEPENDS cmvision roscpp rospy
 #  DEPENDS system_lib
 )
 
@@ -101,88 +93,23 @@ CATKIN_DEPENDS octomap_msgs #octomap octomap_mapping octomap_ros roscpp
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${PCL_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
-# add_library(octomap_imagery
-#   src/${PROJECT_NAME}/octomap_imagery.cpp
+# add_library(hat_detector
+#   src/${PROJECT_NAME}/hat_detector.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(octomap_imagery_node src/octomap_imagery_node.cpp)
-
-add_executable(pcd2octree src/pcd2octree.cpp)
-target_link_libraries(pcd2octree
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(pcd2octree octomap_imagery_gencpp)
-
-add_executable(reprojectImage src/reprojectImage.cpp)
-target_link_libraries(reprojectImage
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(reprojectImage octomap_imagery_gencpp)
-
-add_executable(octomap2Image src/octomap2Image.cpp)
-target_link_libraries(octomap2Image
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(octomap2Image octomap_imagery_gencpp)
-
-add_executable(downsample_clouds src/downsample_clouds.cpp)
-target_link_libraries(downsample_clouds
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(downsample_clouds octomap_imagery_gencpp)
-
-add_executable(clouds2Octomaps src/clouds2Octomaps.cpp)
-target_link_libraries(clouds2Octomaps
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(clouds2Octomaps octomap_imagery_gencpp)
-
-add_executable(transform_clouds src/transform_clouds.cpp)
-target_link_libraries(transform_clouds
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(transform_clouds octomap_imagery_gencpp)
-
-add_executable(replace_foreground src/replace_foreground.cpp)
-target_link_libraries(replace_foreground
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(replace_foreground octomap_imagery_gencpp)
-
-add_executable(display_hatted_object src/display_hatted_object.cpp)
-target_link_libraries(display_hatted_object
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(display_hatted_object octomap_imagery_gencpp)
-
-add_executable(replace_hatted_object src/replace_hatted_object.cpp)
-target_link_libraries(replace_hatted_object
-  ${PCL_LIBRARIES}  
-  ${catkin_LIBRARIES} 
- )
-add_dependencies(replace_hatted_object octomap_imagery_gencpp)
-
+# add_executable(hat_detector_node src/hat_detector_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(octomap_imagery_node octomap_imagery_generate_messages_cpp)
+# add_dependencies(hat_detector_node hat_detector_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(octomap_imagery_node
+# target_link_libraries(hat_detector_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -201,7 +128,7 @@ add_dependencies(replace_hatted_object octomap_imagery_gencpp)
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS octomap_imagery octomap_imagery_node
+# install(TARGETS hat_detector hat_detector_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -226,7 +153,7 @@ add_dependencies(replace_hatted_object octomap_imagery_gencpp)
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_octomap_imagery.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_hat_detector.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

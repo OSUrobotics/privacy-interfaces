@@ -1,0 +1,1 @@
+SkeletonJoint[] joints  # parent (root) joint must be first!

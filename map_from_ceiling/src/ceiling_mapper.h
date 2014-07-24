@@ -10,8 +10,11 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
 #include <geometry_msgs/PointStamped.h>
+#include <math.h>
 // For linear algebra. Compile with -O1 -larmadillo
 #include <armadillo>
+
+#define MAX_PLANES 5
 
 class Corner : public geometry_msgs::PointStamped
 {
@@ -19,6 +22,7 @@ public:
     Corner();
     ~Corner();
 private:
+    int plane_1_id, plane_2_id, plane_3_id;
 };
 
 class CornerFinder
@@ -41,4 +45,6 @@ private:
     void extract_inliers(pcl::PointCloud<pcl::PointXYZ>* original_pc, pcl::PointIndices::Ptr inliers, pcl::PointCloud<pcl::PointXYZ>* plane);
     void publish_plane(pcl::PointCloud<pcl::PointXYZ>* to_publish, int publisher_index);
     void publish_corner(arma::fmat* plane_coefficients, arma::fmat* plane_intersections);
+    void find_corners(arma::fmat plane_coefficients, arma::fmat plane_intersections);
+    bool is_paralell_planes(float a1, float b1, float c1, float a2, float b2, float c2);
 };
