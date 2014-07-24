@@ -45,7 +45,7 @@ class Bound():
 		contours, hierarchy = cv2.findContours(is_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 		#code.interact(local=locals())
 		#print contours
-
+		print type(contours)
 		max_area = 0
 		for index, contour in enumerate(contours):
 			area = cv2.contourArea(contour)
@@ -56,7 +56,8 @@ class Bound():
 		try:
 			best_contour = contours[best_index]
 			rospy.loginfo('Best contour was contour #{0} with area of {1}'.format(best_index, max_area))
-			cv2.drawContours(image_cv2, contours, best_index, green_avg, thickness=-1)  # fill in the largest pink blob
+			cv2.fillConvexPoly(image_cv2, best_contour, -1)
+			# cv2.drawContours(image_cv2, contours, best_index, green_avg, thickness=-1)  # fill in the largest pink blob
 		except(UnboundLocalError):
 			pass
 		#cv2.drawContours(image_cv2, contours, best_index, (0,0,0))  # draw black line around largest pink blob
