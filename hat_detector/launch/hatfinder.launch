@@ -7,5 +7,7 @@
     <param name="spatial_radius_pix" value="0" />
     <param name="debug_on" value="false" />
   </node>
+
+  <node name="detect_hat_in_3D" pkg="hat_detector" type="DetectHatIn3D.py" output="screen" />
 </launch>
 
