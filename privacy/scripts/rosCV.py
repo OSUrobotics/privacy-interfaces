@@ -12,7 +12,10 @@ class rosCV():
 		image_cv = self.bridge.imgmsg_to_cv(image_in, 'bgr8')
 		image_cv2 = numpy.array(image_cv, dtype=numpy.uint8)
 		return image_cv2
-	
+	def depthToCv2(self, image_in):
+		image_cv = self.bridge.imgmsg_to_cv(image_in, '32FC1')
+		image_cv2 = numpy.array(image_cv, dtype=numpy.uint8)
+		return image_cv2	
 	#converts cv2 numpy array to ROS image.
 	def toRos(self,image_cv2): 
 		image_cv = cv.fromarray(image_cv2)
@@ -30,6 +33,27 @@ class rosCV():
 		is_color = cv2.inRange(image_hsv, lowerb, upperb)
 		contours, hierarchy = cv2.findContours(is_color, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 		return contours
+
+	def sortContours(self, contours):
+		largest = sorted(contours, key = cv2.contourArea,reverse = True)[:1]
+		# print cv2.contourArea(largest[0])
+		return largest
+	def find_center(self, contour):
+		moments = cv2.moments(contour, True)
+		x = int(moments['m10']/moments['m00'])
+		y = int(moments['m01']/moments['m00'])
+		return x,y
+	def find_marker(self, image_cv2, lowerb, upperb):
+		contours = self.colorContours(image_cv2, lowerb, upperb)
+		contours = self.sortContours(contours)
+		#creates a bounding box and finds the points of this best contour.
+		if len(contours) > 0:
+			best_contour = contours[0]
+			x, y = self.find_center(best_contour)
+			return x, y, cv2.contourArea(best_contour)
+		else:
+			return None, None, None
+
 #Facial recognition stuff
 
 # 	#Pass it the image and the haar xml file and it finds faces accordingly. Not working very well right now.
