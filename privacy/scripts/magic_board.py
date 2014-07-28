@@ -50,8 +50,8 @@ class Bound():
             mask = cv2.dilate(mask, kernel)
             # mask = cv2.erode(mask, kernel)
             board_depth = self.depth_image[pink_y, pink_x]
-            print "board depth = {0}".format(board_depth)
-            print self.depth_image
+            # print "board depth = {0}".format(board_depth)
+            # print self.depth_image
             # print numpy.where(self.depth_image <= board_depth - 0.2)
             # http://stackoverflow.com/questions/432112/is-there-a-numpy-function-to-return-the-first-index-of-something-in-an-array
             # for i in range(img_height):
@@ -61,11 +61,11 @@ class Bound():
 
             image_cv2 = cv2.inpaint(image_cv2, mask, 5, cv2.INPAINT_TELEA)            
             # cv2.rectangle(image_cv2, (green_x, green_y), (pink_x, pink_y), (0, 0, 0), 3)
-        except():
-        # except(ZeroDivisionError, TypeError, AttributeError):
+        except(ZeroDivisionError):
             pass
-
-        self.rcv.imshow(image_cv2)
+        # except(ZeroDivisionError, TypeError, AttributeError):
+        self.rcv.imshow(self.depth_image)
+        # self.rcv.imshow(image_cv2)
 
         # Convert back to ROS Image msg
         image_out = self.rcv.toRos(image_cv2)
