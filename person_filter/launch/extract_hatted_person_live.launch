@@ -1,0 +1,28 @@
+<launch>
+
+	<!--Start Kinect or Xtion with depth registration-->
+	<include file="$(find openni_launch)/launch/openni.launch" >
+		<arg name="depth_registration" value="true" />
+	</include>
+
+	<!--Launch hat detector -->
+	
+	<!--Run skeleton tracker -->
+	<!-- MUST BE RUN SEPERATELY IN GROOVY -->
+
+	<!--Run hat-on-head detector -->
+
+	<!--Run skeleton re-publisher -->
+	<node pkg="person_filter" type="skeleton_publisher.py" name="skeleton_publisher" output="screen" />
+
+	<!--Run skeleton XYZ->UV converter -->
+	<node pkg="person_filter" type="skeletons_to_UV.py" name="skeletons_to_UV" output="screen" />
+
+	<!--Run message synchronizer!-->
+	<node pkg="person_filter" type="synchronizer" name="synchronizer" output="screen" />
+
+	<!--Run person extractor (displays an image!) -->
+	<node pkg="person_filter" type="skeletons_onto_image.py" name="skeletons_onto_image" output="screen" />
+
+
+</launch>

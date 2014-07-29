@@ -1,0 +1,8 @@
+<launch>
+
+	<!-- Run OpenNI person tracker with correct parameter -->
+	<node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" output="screen" >
+	      <param name="camera_frame_id" value="/camera_depth_frame" />
+	</node>
+
+</launch>

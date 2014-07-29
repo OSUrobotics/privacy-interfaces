@@ -32,8 +32,6 @@ def recite_joints(suffix=''):
 def build_joint(joint_name, child_joints, parent_frame, listener):
     """ Build a single joint in XYZ space using a tf listener. """
     # Get the transform
-    #listener.waitForTransform(joint_name, parent_frame, rospy.Time(0), rospy.Duration(1.0))
-    #transform = listener.lookupTransform(joint_name, parent_frame, rospy.Time(0))
     listener.waitForTransform(parent_frame, joint_name, rospy.Time(0), rospy.Duration(1.0))
     transform = listener.lookupTransform(parent_frame, joint_name, rospy.Time(0))
 
@@ -79,7 +77,7 @@ if __name__ == "__main__":
     # Publisher for joint positions
     pub = rospy.Publisher('/skeletons', SkeletonArray)
     
-    r = rospy.Rate(10)
+    r = rospy.Rate(30)
     while not rospy.is_shutdown():
         skeleton_array = SkeletonArray()  # clear skeleton array
         frames = listener.getFrameStrings()
@@ -101,5 +99,6 @@ if __name__ == "__main__":
 
         skeleton_array.header.frame_id = '/camera_rgb_optical_frame'
         skeleton_array.header.stamp = rospy.Time.now()
-        pub.publish(skeleton_array)
+        if len(skeleton_array.skeletons) > 0:  # if there are any skeletons
+            pub.publish(skeleton_array)
         r.sleep()
