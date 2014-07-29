@@ -13,7 +13,7 @@ class ConverterToUV():
 
     def update_model(self, info):
         self.camera_model.fromCameraInfo(info)
-        rospy.loginfo('Camera model updated!')
+        #rospy.loginfo('Camera model updated!')
 
 
 class SkeletonsToUV(ConverterToUV):

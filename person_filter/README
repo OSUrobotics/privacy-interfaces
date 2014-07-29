@@ -1,9 +1,6 @@
-How to run stuff correctly (follow CAREFULLY!):
+How to run the person filter *live*:
 
-roscore
-rosparam set use_sim_time true
-rosrun tf static_transform_publisher 0 0 0 0 0 0 'camera_depth_frame' 'openni_depth_frame' 100
-rosbag play --clock --loop src/person_filter/bags/skeleton_short.bag
-rosrun person_filter skeleton_publisher.py
-rosrun person_filter skeletons_to_UV.py
-rosrun person_filter skeletons_onto_image.py
+[in Hydro] roslaunch person_filter extract_hatted_person_live.launch
+[in Groovy, in .../person_filter/launch folder] roslaunch openni_tracker.launch
+
+Once the skeleton tracker recognizes a person, the filter will begin displaying images!

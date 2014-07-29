@@ -7,6 +7,7 @@ project(person_filter)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  message_filters
   message_generation
 )
 
@@ -86,6 +87,7 @@ catkin_package(
   CATKIN_DEPENDS 
   message_runtime 
   std_msgs
+  message_filters
 #  DEPENDS system_lib
 )
 
@@ -106,7 +108,11 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-# add_executable(person_filter_node src/person_filter_node.cpp)
+add_executable(synchronizer src/synchronizer.cpp)
+target_link_libraries(synchronizer
+  ${catkin_LIBRARIES}
+)
+add_dependencies(synchronizer person_filter_generate_messages_cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
