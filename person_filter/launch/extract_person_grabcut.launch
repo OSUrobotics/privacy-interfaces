@@ -22,7 +22,7 @@
 	<node pkg="person_filter" type="synchronizer" name="synchronizer" output="screen" />
 
 	<!--Run person extractor (displays an image!) -->
-	<node pkg="person_filter" type="skeletons_onto_image.py" name="skeletons_onto_image" output="screen" />
+	<node pkg="person_filter" type="extract_person_grabcut.py" name="extract_person_grabcut" output="screen" />
 
 
 </launch>
