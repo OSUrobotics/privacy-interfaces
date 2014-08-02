@@ -6,6 +6,7 @@
 	</include>
 
 	<!--Launch hat detector -->
+	<include file="$(find hat_detector)/launch/hatfinder.launch" />
 	
 	<!-- Run OpenNI person tracker with correct parameter -->
 	<node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" output="screen" >
@@ -13,6 +14,7 @@
 	</node>			    
 
 	<!--Run hat-on-head detector -->
+	<node pkg="hat_detector" type="is_hat_on_head.py" name="is_hat_on_head" output="screen" />
 
 	<!--Run skeleton re-publisher -->
 	<node pkg="person_filter" type="skeleton_publisher.py" name="skeleton_publisher" output="screen" />
@@ -24,7 +26,7 @@
 	<node pkg="person_filter" type="synchronizer" name="synchronizer" output="screen" />
 
 	<!--Run person extractor (displays an image!) -->
-	<node pkg="person_filter" type="extract_person_grabcut.py" name="extract_person_grabcut" output="screen" />
+	<node pkg="person_filter" type="replace_hatted_person.py" name="replace_hatted_person" output="screen" />
 
 
 </launch>

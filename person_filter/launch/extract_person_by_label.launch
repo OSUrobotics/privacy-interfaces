@@ -24,7 +24,7 @@
 	<node pkg="person_filter" type="synchronizer" name="synchronizer" output="screen" />
 
 	<!--Run person extractor (displays an image!) -->
-	<node pkg="person_filter" type="extract_person_grabcut.py" name="extract_person_grabcut" output="screen" />
+	<node pkg="person_filter" type="extract_person_by_label.py" name="extract_person_by_label" output="screen" />
 
 
 </launch>

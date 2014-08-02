@@ -5,8 +5,10 @@
 		<arg name="depth_registration" value="true" />
 	</include>
 
-	<!--Run skeleton tracker -->
-	<!-- MUST BE RUN SEPERATELY IN GROOVY -->
+	<!-- Run OpenNI person tracker with correct parameter -->
+	<node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" output="screen" >
+	      <param name="camera_frame_id" value="/camera_depth_frame" />
+	</node>			    
 
 	<!--Run skeleton re-publisher -->
 	<node pkg="person_filter" type="skeleton_publisher.py" name="skeleton_publisher" output="screen" />

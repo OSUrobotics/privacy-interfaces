@@ -55,7 +55,7 @@ class DrawRect():
 			self.P.point.y = vec[1]
 			self.P.point.z = vec[2]
 			
-			print self.P			
+			#print self.P			
 			self.pub.publish(self.P)						
 						
 	def FindBiggestBlob(self, blob):

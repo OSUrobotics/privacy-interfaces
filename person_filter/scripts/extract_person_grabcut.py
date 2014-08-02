@@ -29,7 +29,7 @@ class SkeletonSketcher():
         depth_cv = numpy.asarray(depth_mid)
 
         #for erosion, the bigger the shape, the more it will delete
-        kernel = numpy.ones((5,5),numpy.uint8)
+        kernel = numpy.ones((15,15),numpy.uint8)
 
         #for graphcut, dont change anything
         bgdModel = numpy.zeros((1,65),numpy.float64)
@@ -168,8 +168,18 @@ class SkeletonSketcher():
         image_helper[mask == 2 ] = (100,100,100)
         image_helper[mask == 3 ] = (200,200,200)
         
-        image_helper = cv2.erode(image_helper,kernel,iterations = 1)				
-        
+        ####### FOR TESTING ######
+        #cv.ShowImage('mask before erosion', cv.fromarray(image_helper))
+        #cv2.waitKey(5)
+        ##########################
+
+        image_helper = cv2.erode(image_helper,kernel,iterations = 1)
+
+        ####### FOR TESTING ######
+        #cv.ShowImage('mask after erosion', cv.fromarray(image_helper))
+        #cv2.waitKey(5)
+        ##########################
+
         # get back the new mask after erosion
         mask[numpy.where(numpy.all(image_helper == [0,0,0], axis=-1))] = 0
         mask[numpy.where(numpy.all(image_helper == [255,255,255], axis=-1))] = 1
@@ -223,5 +233,6 @@ if __name__ == "__main__":
     skeleton_sketcher = SkeletonSketcher('/camera/rgb/image_color/sync', 
                                          '/camera/depth_registered/image_raw/sync',
                                          '/skeletons_uv/sync')
+
     rospy.spin()
     

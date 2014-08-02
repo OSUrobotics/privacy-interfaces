@@ -1,6 +1,0 @@
-How to run the person filter *live*:
-
-[in Hydro] roslaunch person_filter extract_hatted_person_live.launch
-[in Groovy, in .../person_filter/launch folder] roslaunch openni_tracker.launch
-
-Once the skeleton tracker recognizes a person, the filter will begin displaying images!

@@ -20,7 +20,10 @@ class HattedHeadDetector():
 		self.pub = rospy.Publisher('/hatted_head', Int8)
 		r = rospy.Rate(10)
 		while not rospy.is_shutdown():
+			hatted_head = Int8()
+			hatted_head.data = 0
 			if self.have_hat_center:
+
 				self.get_head_names()
 				hat_wrt_heads = self.hat_wrt_heads()
 				is_on_heads = []
@@ -32,12 +35,11 @@ class HattedHeadDetector():
 				elif sum(is_on_heads) == 1:
 					which_point = is_on_heads.index(True)
 					which_head = int(self.joints[which_point][-1])
-					hatted_head = Int8()
 					hatted_head.data = which_head
-					self.pub.publish(hatted_head)
 					rospy.loginfo('HAT ON HEAD #{0}!'.format(which_head))
 				else:
 					rospy.loginfo('Nope, no heads are hatted...')
+			self.pub.publish(hatted_head)
 			r.sleep()
 			
 	def hat_callback(self, hat_center):

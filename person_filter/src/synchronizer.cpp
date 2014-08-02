@@ -12,9 +12,9 @@ using namespace sensor_msgs;
 using namespace person_filter;
 using namespace message_filters;
 
-ros::Publisher pub_rgb, pub_depth, pub_skeletons;
+ros::Publisher pub_rgb, pub_depth, pub_skeletons, pub_labels;
 
-void callback(const ImageConstPtr& image_rgb, const ImageConstPtr& image_depth, const SkeletonArrayConstPtr& skeletons)
+void callback(const ImageConstPtr& image_rgb, const ImageConstPtr& image_depth, const SkeletonArrayConstPtr& skeletons, const ImageConstPtr& image_labels)
 {
   // Copy RGB image -- HACK!
   Image image_rgb_sync;
@@ -41,17 +41,29 @@ void callback(const ImageConstPtr& image_rgb, const ImageConstPtr& image_depth, 
   skeletons_sync.header = skeletons->header;
   skeletons_sync.skeletons = skeletons->skeletons;
 
+  // Copy labeled image -- HACK!
+  Image image_labels_sync;
+  image_labels_sync.header = image_labels->header;
+  image_labels_sync.height = image_labels->height;
+  image_labels_sync.width = image_labels->width;
+  image_labels_sync.encoding = image_labels->encoding;
+  image_labels_sync.is_bigendian = image_labels->is_bigendian;
+  image_labels_sync.step = image_labels->step;
+  image_labels_sync.data = image_labels->data;
+
   // Make timestamps equal!
   ros::Time stamp = skeletons->header.stamp;
   image_rgb_sync.header.stamp = stamp;
   image_depth_sync.header.stamp = stamp;
+  image_labels_sync.header.stamp = stamp;
 
   // Publish
   pub_rgb.publish(image_rgb_sync);
   pub_depth.publish(image_depth_sync);
   pub_skeletons.publish(skeletons_sync);
+  pub_labels.publish(image_labels_sync);
 
-  ROS_INFO("Callback!");
+  ROS_INFO("SYNCHRONIZER> Published synchronized messages!");
 }
 
 int main(int argc, char** argv)
@@ -64,16 +76,18 @@ int main(int argc, char** argv)
   pub_rgb = nh.advertise <Image> ("/camera/rgb/image_color/sync", 1);
   pub_depth = nh.advertise <Image> ("/camera/depth_registered/image_raw/sync", 1);
   pub_skeletons = nh.advertise <SkeletonArray> ("/skeletons_uv/sync", 1);
+  pub_labels = nh.advertise <Image> ("/camera/depth_registered/image_labeled_users/sync", 1);
 
   // Initialize subscribers
   message_filters::Subscriber<Image> image_rgb_sub(nh, "/camera/rgb/image_color", 1);
   message_filters::Subscriber<Image> image_depth_sub(nh, "/camera/depth_registered/image_raw", 1);
   message_filters::Subscriber<SkeletonArray> skeletons_sub(nh, "/skeletons_uv", 1);
+  message_filters::Subscriber<Image> image_labels_sub(nh, "/camera/depth_registered/image_labeled_users", 1);
 
-  typedef sync_policies::ApproximateTime<Image, Image, SkeletonArray> MySyncPolicy;
+  typedef sync_policies::ApproximateTime<Image, Image, SkeletonArray, Image> MySyncPolicy;
 
-  Synchronizer<MySyncPolicy> sync(MySyncPolicy(30), image_rgb_sub, image_depth_sub, skeletons_sub);
-  sync.registerCallback(boost::bind(&callback, _1, _2, _3));
+  Synchronizer<MySyncPolicy> sync(MySyncPolicy(30), image_rgb_sub, image_depth_sub, skeletons_sub, image_labels_sub);
+  sync.registerCallback(boost::bind(&callback, _1, _2, _3, _4));
 
   ros::spin();
 
