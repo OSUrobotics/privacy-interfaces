@@ -14,14 +14,20 @@ FUNCTIONAL OUTLINE:
 	      b. Finds face pixels
 	      	 i. Remove green hat (GrabCut?)
 		 ii. Use XYZ information and foreknowledge of the person's head dimensions to chop at the neck
-		 iii. Use blob-finding on depth image to cut out the face (er, head)
+		 iii. Use blob-finding (or GrabCut) on depth image to cut out the face (er, head)
 	      c. Compute metrics
 
 	   3. Concatenate, Analyze, and Plot Data 
 	      a. (MATLAB?) 
 
 
-STRUCTURAL OUTLINE:
+TOOLS:
 
-	   0. 
-	   1. 
+	Message recording -- rosbag
+	Kalman filter -- "kalman_filter" pkg
+	Face detector -- "face_detector" pkg in "people" stack
+	Filtering -- OpenCV "Blur" function
+	Hat detection -- 3D cmvision
+	Segmentation -- OpenCV "GrabCut"
+	Everything -- numpy
+
