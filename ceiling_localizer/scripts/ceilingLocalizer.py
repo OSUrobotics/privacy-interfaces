@@ -202,7 +202,7 @@ if __name__ == '__main__':
 	camera_topic = rospy.get_param('ceilingLocalizer/camera_topic', "/ceiling/rgb/camera_info")
 	robot_depth = rospy.get_param('ceilingLocalizer/robot_depth', 2.289175)
 	robot_frame = rospy.get_param('ceilingLocalizer/robot_frame', "base_top")
-	pattern = rospy.get_param('ceilingLocalizer/pattern', "/home/local/CORNELL-COLLEGE/lscott15/privacy/src/privacy-interfaces/ceiling_localizer/checkerboard2.png")
+	pattern = rospy.get_param('ceilingLocalizer/pattern', "/home/local/CORNELL-COLLEGE/lscott15/privacy/src/privacy-interfaces/ceiling_localizer/res/checkerboard2.png")
 
 	cf = ceilingLocalizer(image_topic, camera_topic, robot_depth, robot_frame, pattern)
 
