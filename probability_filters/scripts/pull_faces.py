@@ -8,6 +8,12 @@ def faces_cb(faces):
 
 rospy.init_node('pull_faces')
 
-rospy.Subscriber('/face_detector/faces_cloud', PointCloud, faces_cb)
+sub = rospy.Subscriber('/face_detector/faces_cloud', PointCloud, faces_cb)
 rospy.loginfo('Subscribed to faces!')
+
+### Test face_detector unregistration handling ###
+# rospy.sleep(5.0)
+# sub.unregister()
+# rospy.loginfo('Done!')
+
 rospy.spin()
