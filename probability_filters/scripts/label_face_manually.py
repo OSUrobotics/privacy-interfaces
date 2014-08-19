@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # 
-# Detects face using hat position, real face size, and depth information.
+# Allows user to label the face on each image.
 # Creates mask of face pixels to be used as ground truth.
 # 
 

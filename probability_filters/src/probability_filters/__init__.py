@@ -25,17 +25,26 @@ class KalmanFilter():
         self.dt_scale = dt_scale
         self.mu = None
 
-    def run(self, t, z):
-        if self.mu is None:  # first measurement
+    def run(self, t, z=None):
+        if self.mu is None:
+            print 'First measurement!'
             self.N = len(z)
             self.I = numpy.eye(self.N)
-            self.mu = z
+            self.mu = numpy.asarray(z)
             self.sig = self.S * numpy.eye(self.N)
-        else:  # not the first measurement
+        else:
             dt = t - self.t
             _mu, _sig = self.predict(dt)
-            if self.z is not None:
-                self.mu, self.sig = self.update(_mu, _sig, z)
+            if z is not None:
+                _K, self.mu, self.sig = self.update(_mu, _sig, z, dt)
+            else:  # if no measurement, stick with prediction
+                self.mu = _mu
+                self.sig = _sig
+
+            print t
+            print _mu, _sig.diagonal(), _K.diagonal()
+            print self.mu, self.sig.diagonal()
+            print ''
             
         self.t = t  # update time -- all variables now up-to-date
             
@@ -44,11 +53,11 @@ class KalmanFilter():
         _sig = self.sig + self.R * self.I * dt / self.dt_scale
         return _mu, _sig
 
-    def update(self, _mu, _sig, z):
-        K = _sig.dot(numpy.linalg.inv(_sig + self.Q * self.I))
-        mu = _mu + K.dot(z - _mu)
-        sig = (self.I - K).dot(_sig)
-        return mu, sig
+    def update(self, _mu, _sig, z, dt):
+        _K = _sig.dot(numpy.linalg.inv(_sig + self.Q * self.I * dt / self.dt_scale))  # perhaps Q * I * dt / dt_scale
+        mu = _mu + _K.dot(z - _mu)
+        sig = (self.I - _K).dot(_sig)
+        return _K, mu, sig
 
         
         
