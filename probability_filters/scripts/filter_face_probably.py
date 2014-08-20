@@ -11,7 +11,7 @@ import sys
 import rosbag
 from sensor_msgs.msg import Image, CameraInfo
 from image_geometry import PinholeCameraModel
-from kalman_filter import Kalman 
+from pykalman import KalmanFilter
 import numpy
 import cv2
 from cv_bridge import CvBridge
@@ -41,24 +41,46 @@ class FaceTracker():
     """ Keeps track of face location. """
     def __init__(self):
         self.classifier = cv2.CascadeClassifier(os.environ['ROS_ROOT'] + '/../OpenCV/haarcascades/haarcascade_frontalface_alt.xml')
-        self.tracker = Kalman(Q=.002, R=0.01, P=.01) 
+        self.kf = KalmanFilter(transition_matrices =  numpy.eye(4),
+                               observation_matrices = numpy.eye(4)) 
+        self.faces = numpy.ma.asarray([[0, 0, 0, 0], 
+                                       [0, 0, 0, 0]])  # two (2) dummy measurements
+        self.faces[0:2] = numpy.ma.masked
+        self.mu, self.sig = self.kf.filter(self.faces)  # initialize off of dummy measurements
 
     def detect_face(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         faces = self.classifier.detectMultiScale(gray, 1.3, 5)
-        for (x,y,w,h) in faces:
-            self.tracker.update([x + w/2, 
-                                 y + h/2, 
-                                 w, 
-                                 h])
-            cv2.rectangle(image, (x,y), (x+w,y+h), (0,255,0), 1)
-            cv2.circle(image, (x + w/2, y + h/2), 3, (0,255,0), -1)
+        if len(faces) > 0:
+            (x,y,w,h) = faces[0]
+            face = numpy.asarray([x + w/2, y + h/2, w, h])
+            self.faces = numpy.concatenate((self.faces, [face]))
+            cv2.rectangle(image, (x,y), (x+w,y+h), (0,255,0), 1)  # plot detected face
+        else:
+            face = numpy.asarray([0, 0, 0, 0])
+            self.faces = numpy.concatenate((self.faces, [face]))
+            self.faces[-1] = numpy.ma.masked
+        
+        mu_new, sig_new = self.kf.filter_update(self.mu[-1], self.sig[-1], 
+                                                observation = self.faces[-1])
 
-        [u, v, w, h] = self.tracker.values()  # get estimates
-        p = sum(self.tracker.p) / len(self.tracker.p)
+        self.mu = numpy.concatenate((self.mu, [mu_new]))
+        self.sig = numpy.concatenate((self.sig, [sig_new]))
+        (u,v,w,h) = mu_new
 
-        cv2.circle(image, (int(u), int(v)), 3, (0,0,255), -1)  # location estimate
-        cv2.rectangle(image, (int(u - w/2), int(v - h/2)), (int(u + w/2), int(v + h/2)), (0,0,255), 1)  # location uncertainty
+        cv2.rectangle(image, (int(u - w/2), int(v - h/2)), (int(u + w/2), int(v + h/2)), (0,0,255), 1)  # plot estimated face
+
+        # Confidence interval: 99.7% = 3*sigma  (per side!)
+        (du,dv,dw,dh) = numpy.sqrt(sig_new.diagonal()) * 3
+        w += 2*du  # expands both sides of rectangle (counts TWICE)
+        w += dw  # counts ONCE
+        h += 2*dv
+        h += dh
+        #print u,v,w,h
+        #print du,dv,dw,dh
+        
+        cv2.rectangle(image, (int(u - w/2), int(v - h/2)), (int(u + w/2), int(v + h/2)), (0,0,255), 1)  # plot estimated face
+
         cv2.imshow('Image with Face(s)', image)
         cv2.waitKey(10)
 

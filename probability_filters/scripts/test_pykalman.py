@@ -29,21 +29,24 @@ if __name__ == "__main__":
 
         # First two (2) measurements (initializes variables)
         measurements = numpy.ma.asarray(UV)  # masking enabled!
+        measurements = numpy.ma.concatenate((numpy.ma.asarray([[0,0],[0,0]]),
+                                             measurements))
+        measurements[0:2] = numpy.ma.masked
         measurements[::2] = numpy.ma.masked
         measurements[100:110] = numpy.ma.masked
         measurements[200:210] = numpy.ma.masked
         measurements[300:310] = numpy.ma.masked
         measurements[400:410] = numpy.ma.masked
-        mu, sig = kf.filter(measurements[0:2])
-        #print measurements
-        #print mu
-        #print sig
-        #print ''
+        mu, sig = kf.filter(measurements[0:2])  # initialize on bogus data
+        print measurements
+        print mu
+        print sig
+        print ''
         
         #t = 0
         mu = mu[-1]
         sig = sig[-1]
-        for i in range(2, len(UV)):  # starting with third measurement...
+        for i in range(2, len(measurements)):  # starting with third measurement...
 
             if rospy.is_shutdown():  # easy interruption
                 break
