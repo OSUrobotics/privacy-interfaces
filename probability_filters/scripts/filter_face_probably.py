@@ -28,9 +28,9 @@ class ImageHandler():
         self.images = self.bag.read_messages(topics='/camera/rgb/image_color')
         
         # Prepare for UV <-> XYZ conversion
-        camera_info = self.bag.read_messages(topics='/camera/rgb/camera_info').next()[1]
-        self.camera_model = PinholeCameraModel()
-        self.camera_model.fromCameraInfo(camera_info)
+        #camera_info = self.bag.read_messages(topics='/camera/rgb/camera_info').next()[1]
+        #self.camera_model = PinholeCameraModel()
+        #self.camera_model.fromCameraInfo(camera_info)
 
     def get_image(self):
         imgmsg = self.images.next()[1]
@@ -42,7 +42,11 @@ class FaceTracker():
     def __init__(self):
         self.classifier = cv2.CascadeClassifier(os.environ['ROS_ROOT'] + '/../OpenCV/haarcascades/haarcascade_frontalface_alt.xml')
         self.kf = KalmanFilter(transition_matrices =  numpy.eye(4),
-                               observation_matrices = numpy.eye(4)) 
+                               observation_matrices = numpy.eye(4),
+                               transition_covariance = numpy.eye(4) * 5,
+                               observation_covariance = numpy.eye(4),
+                               initial_state_covariance = numpy.eye(4),
+                               initial_state_mean = numpy.ones(4)) 
         self.faces = numpy.ma.asarray([[0, 0, 0, 0], 
                                        [0, 0, 0, 0]])  # two (2) dummy measurements
         self.faces[0:2] = numpy.ma.masked
