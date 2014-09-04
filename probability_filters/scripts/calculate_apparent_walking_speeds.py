@@ -57,6 +57,15 @@ if __name__ == "__main__":
     pyplot.ylabel('Average Walking Speed (pixels/second)')
     pyplot.show()
         
+    # Fig. 2: How long to walk across FoV at various depths?
+    fovs = [r[0]*639 for r in res]
+    pyplot.plot(depths, [fov / 1.39 for fov in fovs])
+    #pyplot.yscale('log')
+    pyplot.title('')
+    pyplot.xlabel('Distance from Camera (m)')
+    pyplot.ylabel('Time to Walk the FoV Width at Average Speed (s)')
+    pyplot.show()
+        
         
             
             

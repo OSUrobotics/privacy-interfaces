@@ -62,11 +62,12 @@ class FaceDetector():
 
     def detect_face(self, image, dt):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        faces = self.classifier.detectMultiScale(gray, 1.3, 5)
+        faces = self.classifier.detectMultiScale(gray, 1.15, 1)
 
         if len(faces) > 0:
             (x,y,w,h) = faces[0]
             self.face = [x, y, w, h]
+            self.face_size = w
             cv2.rectangle(image, (x,y), (x+w,y+h), (0,255,0), 1)  # plot detected face
             if not self.have_face:
                 self.have_face = True
@@ -85,10 +86,14 @@ class FaceDetector():
         mean_face = 0.1875  # m
         mean_speed = 1.626  # m/s
         sd_speed = 0.201   # m/s
-        meters_to_pixels = w / mean_face
+        meters_to_pixels = self.face_size / mean_face
+        print meters_to_pixels
         mean_speed *= meters_to_pixels  # convert
         sd_speed *= meters_to_pixels  # convert
-        expansion = mean_speed * dt + ci * sd_speed * dt
+        expansion = (mean_speed + ci * sd_speed) * dt
+        print mean_speed, sd_speed
+        print dt, expansion
+        print ''
         x -= expansion
         y -= expansion
         w += 2*expansion
