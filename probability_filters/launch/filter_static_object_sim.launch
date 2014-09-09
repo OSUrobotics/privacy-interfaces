@@ -1,0 +1,10 @@
+<launch>
+
+	<!-- SIMULATOR -->
+	<node pkg="probability_filters" type="simulate_amcl_and_camera.py" name="simulator" output="screen" />
+	
+	<!-- SIMULATOR -->
+	<node pkg="probability_filters" type="project_onto_possible_cameras.py" name="projector" output="screen" />
+
+
+</launch>
