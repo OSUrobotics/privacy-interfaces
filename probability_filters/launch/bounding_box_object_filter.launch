@@ -1,9 +1,12 @@
 <launch>
 
 	<!-- AMCL PARSER -->
-	<node pkg="probability_filters" type="parse_amcl_for_filtering.py" name="amcl_parser" output="screen" />
+	<node pkg="probability_filters" type="parse_amcl_for_filtering.py" name="amcl_parser" output="screen" >
+	      <param name="use_particles" value="False" />
+	      <param name="confidence_in_sigmas" value="2" />
+	</node>
 
 	<!-- BOUNDING BOX OBJECT FILTER -->
 	<node pkg="probability_filters" type="bounding_box_object_filter.py" name="bounding_box_filter" output="screen" />
 
-</launch>p
+</launch>
