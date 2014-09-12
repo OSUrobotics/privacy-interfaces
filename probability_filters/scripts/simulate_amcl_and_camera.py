@@ -75,7 +75,7 @@ class SimulatedRobot():
         self.br.sendTransform((2.0, 3.0, 0.0),
                               (0.0, 0.0, 0.0, 1.0),
                               rospy.Time.now(),
-                              '/base_link',
+                              '/base_footprint',
                               '/map')
         self.pub_polygon.publish(self.polygon)
 

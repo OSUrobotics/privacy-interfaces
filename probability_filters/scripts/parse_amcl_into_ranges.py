@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
 import rospy
+from std_msgs.msg import Float32MultiArray, MultiArrayDimension
 from geometry_msgs.msg import Pose, PoseWithCovarianceStamped, PoseArray
 import numpy
 import tf
 from tf.transformations import *
+
+
+# Subscribes to robot pose information, either from an array of
+#  possible poses or from an estimated pose with covariance
+#  matrix. Publishes pose ranges for a specified confidence level.
 
 
 class AmclParser():
@@ -15,7 +21,7 @@ class AmclParser():
 
         self.lis = tf.TransformListener()
 
-        self.pub = rospy.Publisher('/camera_pose_extremes', PoseArray)
+        self.pub = rospy.Publisher('/robot_pose_ranges', Float32MultiArray)
 
         if use_particles:
             rospy.loginfo('Subscribing to cloud of AMCL poses...')
@@ -45,13 +51,7 @@ class AmclParser():
         y_min = min(y); y_max = max(y)
         w_min = min(w); w_max = max(w)
         
-        # Form PoseArray in camera frame; publish!
-        camera_poses = permute_pose_ranges_2d([[x_min, x_max], 
-                                               [y_min, y_max], 
-                                               [w_min, w_max]])
-        camera_poses.header.frame_id = poses.header.frame_id
-        camera_poses.header.stamp = rospy.Time.now()
-        self.pub.publish(camera_poses)
+        self.publish_float32multiarray(x_min, x_max, y_min, y_max, w_min, w_max)  # publish!
 
 
     def covariance_callback(self, pose):
@@ -75,58 +75,27 @@ class AmclParser():
         w_min = z_rotation - self.conf * sdev[5]
         w_max = z_rotation + self.conf * sdev[5]
 
-        # Form PoseArray in camera frame; publish!
-        camera_poses = self.permute_pose_ranges_2d([[x_min, x_max], 
-                                               [y_min, y_max], 
-                                               [w_min, w_max]])
-        camera_poses.header.frame_id = pose.header.frame_id
-        camera_poses = self.transform_pose_array(camera_poses, 
-                                                 '/camera_rgb_optical_frame',
-                                                 '/base_link')
-        camera_poses.header.stamp = rospy.Time.now()
-        self.pub.publish(camera_poses)
+        self.publish_float32multiarray(x_min, x_max, y_min, y_max, w_min, w_max)  # publish!
 
 
-    def permute_pose_ranges_2d(self, ranges):
-        """ INPUT ranges = [[x_min, x_max], [y_min, y_max], [w_min, w_max]] """
-        poses = PoseArray()
-        for x in ranges[0]:
-            for y in ranges[1]:
-                for w in ranges[2]:
-                    pose = Pose()
-                    [pose.position.x,
-                     pose.position.y,
-                     pose.position.z] = [x, y, 0.0]
-                    [pose.orientation.x,
-                     pose.orientation.y,
-                     pose.orientation.z,
-                     pose.orientation.w] = quaternion_from_euler(0.0, 0.0, w)
-                    poses.poses.append(pose)
-        return poses
-            
-    def transform_pose_array(self, pose_array, source_frame, target_frame):
+    def publish_float32multiarray(self, x_min, x_max, y_min, y_max, w_min, w_max):
 
-        # Look up transform from [base] to [camera]
-        translation, rotation = self.lis.lookupTransform(target_frame, source_frame, rospy.Time(0))
+        # Fill a Float32MultiArray with ranges, then publish
+        ranges = Float32MultiArray()
+        dimension = MultiArrayDimension()
+        dimension.label = 'dimension'
+        dimension.size = 3
+        dimension.stride = 2*3
+        ranges.layout.dim.append(dimension)
+        min_or_max = MultiArrayDimension()
+        min_or_max.label = 'minmax'
+        min_or_max.size = 2
+        min_or_max.stride = 2
+        ranges.layout.dim.append(min_or_max)
+        ranges.layout.data_offset = 0
+        ranges.data = [x_min, x_max, y_min, y_max, w_min, w_max]
+        self.pub.publish(ranges)
 
-        for pose in pose_array.poses:
-
-            # Translate
-            pose.position.x += translation[0]
-            pose.position.y += translation[1]
-            pose.position.z += translation[2]
-
-            # Rotate
-            [pose.orientation.x,
-             pose.orientation.y,
-             pose.orientation.z,
-             pose.orientation.w] = quaternion_multiply([pose.orientation.x,
-                                                        pose.orientation.y,
-                                                        pose.orientation.z,
-                                                        pose.orientation.w], rotation)
-
-        return pose_array
-        
 
 if __name__ == "__main__":
 
