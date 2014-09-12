@@ -6,6 +6,13 @@
 	      <param name="confidence_in_sigmas" value="2" />
 	</node>
 
+	<!-- TRANSFORM OBJECT BOUNDS TO /map FRAME -->
+	<node pkg="probability_filters" type="transform_polygon_stamped.py" name="polygon_transformer" output="screen" >
+	      <param name="target_frame" value="/map" />
+	      <remap from="polygon_in" to="object_bounds" />
+	      <remap from="polygon_out" to="object_bounds_map" />
+	</node>
+
 	<!-- EXTREME VIEWPOINT FINDER -->
 	<node pkg="probability_filters" type="find_extreme_viewpoints.py" name="extreme_viewpoint_finder" output="screen" />
 
