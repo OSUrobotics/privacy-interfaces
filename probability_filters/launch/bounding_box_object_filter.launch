@@ -17,6 +17,6 @@
 	<node pkg="probability_filters" type="find_extreme_viewpoints.py" name="extreme_viewpoint_finder" output="screen" />
 
 	<!-- BOUNDING BOX OBJECT FILTER -->
-	<!--node pkg="probability_filters" type="bounding_box_object_filter.py" name="bounding_box_filter" output="screen" /-->
+	<node pkg="probability_filters" type="bounding_box_object_filter.py" name="bounding_box_filter" output="screen" />
 
 </launch>

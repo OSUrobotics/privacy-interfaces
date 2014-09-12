@@ -3,22 +3,37 @@
 import rospy
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import PointCloud
-from geometry_msgs.msg import Point32
+from geometry_msgs.msg import Point32, PolygonStamped
 import numpy
 import tf
 from tf.transformations import *
-from math import atan2, sin, cos, pi
+from math import atan2, sin, cos, pi, sqrt
 
 
 class ExtremeViewpointFinder():
 
     def __init__(self):
         
+        self.need_bounds = True
+        
         self.lis = tf.TransformListener()
 
-        self.pub = rospy.Publisher('/camera_viewpoint_extremes', PointCloud)
+        self.pub = rospy.Publisher('/extreme_vertex_projections', PointCloud)
+
+        rospy.Subscriber('/object_bounds_map', PolygonStamped, self.bounds_callback)
+        
+        while self.need_bounds:  # block until we get object boundaries
+            rospy.sleep(0.01)
+
+        rospy.loginfo('Got object bounds! Proceeding to find extreme projections.')
 
         rospy.Subscriber('/robot_pose_ranges', Float32MultiArray, self.ranges_callback)
+        
+
+    def bounds_callback(self, bounds):
+        if self.need_bounds:
+            self.bounds = bounds
+            self.need_bounds = False
 
 
     def ranges_callback(self, ranges):
@@ -69,8 +84,9 @@ class ExtremeViewpointFinder():
         theta = theta[facing_object]
         yaw = yaw[facing_object]
 
-        # Find min/max of radius & yaw
+        # Find min/max of radius, theta, & yaw
         r_min = min(r); r_max = max(r)
+        theta_min = min(theta); theta_max = max(theta)
         yaw_min = min(yaw); yaw_max = max(yaw)
 
         ###### Switch to the POV of the Camera ######
@@ -79,17 +95,35 @@ class ExtremeViewpointFinder():
         base_views.header.frame_id = '/base_footprint'
         base_views.header.stamp = rospy.Time(0)
         for r_i in [r_min, r_max]:
-            for yaw_i in [yaw_min, yaw_max]:
-                base_view = Point32()
-                base_view.x = r_i * cos(-yaw_i)
-                base_view.y = r_i * sin(-yaw_i)
-                base_view.z = obj[2] - 0.0  # since base_footprint is at z = 0
-                base_views.points.append(base_view)
-        camera_views = self.lis.transformPointCloud('/camera_rgb_optical_frame', base_views)
+            for theta_i in [theta_min, theta_max]:
+                for yaw_i in [yaw_min, yaw_max]:
+                    for point in self.bounds.polygon.points:  # resolve object bounds here because it'd be costly to do it 125,000 times
+
+                        base = [r_i * cos(theta_i),  # viewpoint relative to object *center*, /map frame
+                                r_i * sin(theta_i)]
+
+                        base_rel = [b - p for b, p in zip(base, [point.x,  # viewpoint relative to object *vertex*, /map frame
+                                                                 point.y])]
+
+                        # Calculate new radius and yaw (relative to object vertex instead of center)
+                        r_new = sqrt(sum([el**2 for el in base_rel]))
+                        cosine = sum([b + br for b, br in zip(base, base_rel)])  # calculate dot product by hand
+                        sine = base[0] * base_rel[1] - base[1] * base_rel[0]  # calculate cross product by hand
+                        d_yaw = -1 * atan2(sine, cosine)
+                        yaw_new = yaw_i + d_yaw
+
+                        if yaw_new > -pi/2 and yaw_new < pi/2:  # abort if we're not facing the object vertex
+
+                            # Object *vertex* location from perspective of /base_footprint
+                            base_view = Point32()
+                            base_view.x = r_new * cos(-yaw_new)
+                            base_view.y = r_new * sin(-yaw_new)
+                            base_view.z = obj[2] - 0.0  # since base_footprint is at z = 0
+                            base_views.points.append(base_view)
+
+        camera_views = self.lis.transformPointCloud('/camera_rgb_optical_frame', base_views)  # transform to camera frame
 
         self.pub.publish(camera_views)
-
-
         
 
 if __name__ == "__main__":
