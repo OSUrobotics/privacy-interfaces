@@ -36,6 +36,7 @@ class BoundingBoxFilter():
     def projections_callback(self, projections):
         self.projections = projections
         if not self.have_projections:
+            rospy.loginfo('Got projections! Can now begin filtering.')
             self.have_projections = True
 
     def image_callback(self, image):

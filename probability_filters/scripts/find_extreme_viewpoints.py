@@ -40,12 +40,12 @@ class ExtremeViewpointFinder():
 
         # Parse input
         x_min, x_max, y_min, y_max, w_min, w_max = ranges.data
-        dx = (x_max - x_min) / 49
-        dy = (y_max - y_min) / 49
-        dw = (w_max - w_min) / 49
+        resolution = 3#50
+        dx = (x_max - x_min) / (resolution-1)
+        dy = (y_max - y_min) / (resolution-1)
+        dw = (w_max - w_min) / (resolution-1)
 
         # Generate XYW pose possibilities -- 125,000 of them!
-        resolution = 50
         x_list = numpy.array([x_min + dx*step for step in range(resolution)])
         y_list = numpy.array([y_min + dy*step for step in range(resolution)])
         w_list = numpy.array([w_min + dw*step for step in range(resolution)])
@@ -88,6 +88,7 @@ class ExtremeViewpointFinder():
         r_min = min(r); r_max = max(r)
         theta_min = min(theta); theta_max = max(theta)
         yaw_min = min(yaw); yaw_max = max(yaw)
+        #print [r_min, r_max], [theta_min, theta_max], [yaw_min, yaw_max]
 
         ###### Switch to the POV of the Camera ######
         # Permute (yields 4 poses), convert, and transform
@@ -104,10 +105,13 @@ class ExtremeViewpointFinder():
 
                         base_rel = [b - p for b, p in zip(base, [point.x,  # viewpoint relative to object *vertex*, /map frame
                                                                  point.y])]
+                        
 
                         # Calculate new radius and yaw (relative to object vertex instead of center)
                         r_new = sqrt(sum([el**2 for el in base_rel]))
-                        cosine = sum([b + br for b, br in zip(base, base_rel)])  # calculate dot product by hand
+                        base = [el / r_i for el in base]  # normalize
+                        base_rel = [el / r_new for el in base_rel]  # normalize
+                        cosine = sum([b * br for b, br in zip(base, base_rel)])  # calculate dot product by hand
                         sine = base[0] * base_rel[1] - base[1] * base_rel[0]  # calculate cross product by hand
                         d_yaw = -1 * atan2(sine, cosine)
                         yaw_new = yaw_i + d_yaw
@@ -118,12 +122,13 @@ class ExtremeViewpointFinder():
                             base_view = Point32()
                             base_view.x = r_new * cos(-yaw_new)
                             base_view.y = r_new * sin(-yaw_new)
-                            base_view.z = obj[2] - 0.0  # since base_footprint is at z = 0
+                            base_view.z = obj[2] + point.z - 0.0  # since base_footprint is at z = 0
                             base_views.points.append(base_view)
 
         camera_views = self.lis.transformPointCloud('/camera_rgb_optical_frame', base_views)  # transform to camera frame
 
         self.pub.publish(camera_views)
+        #self.pub.publish(base_views)  # FOR DEBUG ONLY
         
 
 if __name__ == "__main__":
