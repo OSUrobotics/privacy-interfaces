@@ -19,7 +19,7 @@ class SimulatedObject():
         """ Continuously send out information, as if an object is detected. """
         rospy.loginfo('Running object simulator...now!')
         
-        self.object_location = self.get_object_location()
+        #self.object_location = self.get_object_location()
 
         r = rospy.Rate(30)
         i = 0
@@ -30,7 +30,8 @@ class SimulatedObject():
 
     def send(self):
         """ Broadcast TF frames and Publish stuff. """
-        self.br.sendTransform(self.object_location,
+        #self.br.sendTransform(self.object_location,
+        self.br.sendTransform((3.30, 1.35, 0.45),
                               (0.0, 0.0, 0.0, 1.0),  # rotation doesn't matter
                               rospy.Time.now(),
                               '/private_object',

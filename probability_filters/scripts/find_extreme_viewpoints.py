@@ -40,7 +40,7 @@ class ExtremeViewpointFinder():
 
         # Parse input
         x_min, x_max, y_min, y_max, w_min, w_max = ranges.data
-        resolution = 3#50
+        resolution = 2
         dx = (x_max - x_min) / (resolution-1)
         dy = (y_max - y_min) / (resolution-1)
         dw = (w_max - w_min) / (resolution-1)
