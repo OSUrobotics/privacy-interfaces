@@ -45,13 +45,19 @@ class BoundingBoxFilter():
             #cv2.fillConvexPoly(array,
             #numpy.asarray(polygon),
             #(0, 0, 255))
+            u_list = []
+            v_list = []
             for point in self.projections.points:
                 u, v = self.model.project3dToPixel((point.x,
                                                   point.y,
                                                   point.z))
-                print u, v
+                u_list.append(u)
+                v_list.append(v)
+            u_min = min(u_list); u_max = max(u_list)
+            v_min = min(v_list); v_max = max(v_list)
+            cv2.rectangle(array, (int(u_min), int(v_min)), (int(u_max), int(v_max)), (0, 0, 255), -1)
+            for u, v in zip(u_list, v_list):
                 cv2.circle(array, (int(u), int(v)), 3, (255, 0, 0))
-            print
             image_new = self.bridge.cv2_to_imgmsg(array, "bgr8")
             image_new.header.stamp = rospy.Time.now()
             self.image_pub.publish(image_new)
