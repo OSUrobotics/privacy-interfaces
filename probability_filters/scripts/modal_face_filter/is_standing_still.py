@@ -11,6 +11,8 @@ class StandingStillMeter():
     def __init__(self, transition_time):
         """ INPUT: time in seconds a person must remain within one
         step before we say they are standing still. """
+        self.transition_time = transition_time
+        
         self.lis = tf.TransformListener()
         
         self.is_still = False
@@ -54,18 +56,18 @@ class StandingStillMeter():
 
     def estimate_step_size(self):
         left = [foot - hip for foot, hip in zip(self.skelly['left_foot_1'], self.skelly['left_hip_1'])]
-        d_left = sqrt(sum([el**2 for el in left]))
+        length_left = sqrt(sum([el**2 for el in left]))
 
         right = [foot - hip for foot, hip in zip(self.skelly['right_foot_1'], self.skelly['right_hip_1'])]
-        d_right = sqrt(sum([el**2 for el in right]))
+        length_right = sqrt(sum([el**2 for el in right]))
 
-        if abs(left-right) < 0.20:  # leg lengths don't differ by over 20cm
-            self.step_length = left + right  # 2 * MEAN(left, right)
+        if abs(length_left - length_right) < 0.20:  # leg lengths don't differ by over 20cm
+            self.step_length = (length_left + length_right) / 2  # arithmetic mean
             self.step_msg = Float32()
             self.step_msg.data = self.step_length
             self.need_step_size = False
         else:
-            rospy.logerr('Leg lengths were too dissimilar! Something is wrong.')
+            rospy.logerr('Leg lengths were too dissimilar: {0}m vs. {1}m'.format(length_left, length_right))
 
     def publish_whether_still(self):
         # Append newest measurement
@@ -74,7 +76,7 @@ class StandingStillMeter():
 
         # Check newest vs. oldest
         # If distance is too big, pop the oldest and repeat
-        while sqrt(sum([(new - old)**2 for old, new in zip(torso_history[0], torso_history[-1])])) > self.step_length:
+        while sqrt(sum([(new - old)**2 for old, new in zip(self.torso_history[0], self.torso_history[-1])])) > self.step_length:
             self.torso_history.pop(0)
             self.time_history.pop(0)
 
@@ -91,11 +93,14 @@ class StandingStillMeter():
         stillness_msg.data = self.is_standing_still
         self.pub_stillness.publish(stillness_msg)
         
-    def run():
+    def run(self):
         r = rospy.Rate(10)
         warned = False
         while not rospy.is_shutdown():
             if self.lis.frameExists('head_1'):
+                if warned:
+                    rospy.loginfo('OK, the skeleton is now in the /tf tree.')
+                    warned = False
 
                 self.get_skeleton()
                 self.publish_torso_msg()
@@ -104,14 +109,13 @@ class StandingStillMeter():
                     self.estimate_step_size()
                 if not self.need_step_size:
                     self.pub_step.publish(self.step_msg)
-
-                self.publish_whether_still()
-                warned = False
-                r.sleep()
+                    self.publish_whether_still()
             else:
                 if not warned:
                     rospy.logwarn('The skeleton you are looking for is not in the /tf tree. Try restarting the tracker!')
                     warned = True
+
+            r.sleep()
     
 
 if __name__ == "__main__":

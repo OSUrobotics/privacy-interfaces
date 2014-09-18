@@ -9,6 +9,8 @@
 	<!--RUN SKELETON TRACKER-->
 	<node pkg="openni_tracker" type="openni_tracker" name="skeleton_tracker" />
 
+	<!--RUN STAND/WALK CLASSIFIER-->
+	<node pkg="probability_filters" type="is_standing_still.py" name="is_standing_still" output="screen" />
 	
 
 </launch>
