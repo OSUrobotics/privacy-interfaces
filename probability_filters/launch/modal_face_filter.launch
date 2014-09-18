@@ -1,0 +1,14 @@
+<launch>
+
+	<!--LAUNCH KINECT FOR IMAGE-GETTING
+	 (NOTE THAT RENAMING THE CAMERA FIXES A tf PROBLEM)-->
+	<include file="$(find openni_launch)/launch/openni.launch" >
+		 <arg name="camera" value="openni"/>
+ 	</include>
+
+	<!--RUN SKELETON TRACKER-->
+	<node pkg="openni_tracker" type="openni_tracker" name="skeleton_tracker" />
+
+	
+
+</launch>
