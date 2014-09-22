@@ -75,8 +75,8 @@ class PersonExtracter():
         except CvBridgeError, e:
             print e
                 
-        #cv2.imshow('Extracted people', image_np)
-        #cv2.waitKey(1)
+        cv2.imshow('Extracted people', image_np)
+        cv2.waitKey(1)
 
         self.pub.publish(image)
 
