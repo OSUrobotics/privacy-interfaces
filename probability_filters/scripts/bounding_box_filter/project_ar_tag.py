@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import os
 import tf
 import cv2
 from cv_bridge import CvBridge
@@ -13,7 +14,7 @@ import pickle  # gonna need a pickle
 
 class ARTagCornerGrabber():
     def __init__(self):
-        self.file = '~/ar_tag_corners_' + str(rospy.Time.now().to_nsec()) + '.pickle'
+        self.file = os.environ['HOME'] + '/ar_tag_corners_' + str(rospy.Time.now().to_nsec()) + '.pickle'
         self.lis = tf.TransformListener()
         self.bridge = CvBridge()
         self.model = PinholeCameraModel()
