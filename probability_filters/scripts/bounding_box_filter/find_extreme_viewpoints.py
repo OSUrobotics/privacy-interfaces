@@ -125,7 +125,7 @@ class ExtremeViewpointFinder():
                             base_view.z = obj[2] + point.z - 0.0  # since base_footprint is at z = 0
                             base_views.points.append(base_view)
 
-        camera_views = self.lis.transformPointCloud('/camera_rgb_optical_frame', base_views)  # transform to camera frame
+        camera_views = self.lis.transformPointCloud('/map', base_views)  # transform to map frame
 
         camera_views.header.stamp = rospy.Time.now()  # close enough
         self.pub.publish(camera_views)

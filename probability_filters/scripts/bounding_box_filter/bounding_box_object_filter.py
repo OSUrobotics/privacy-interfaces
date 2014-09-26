@@ -18,6 +18,8 @@ class BoundingBoxFilter():
         self.only_record = only_record
         self.file = os.environ['HOME'] + '/filter_corners_' + str(rospy.Time.now().to_nsec()) + '.pickle'
 
+        self.lis = tf.TransformListener()
+
         self.need_info = True
         self.model = PinholeCameraModel()
 
@@ -31,10 +33,9 @@ class BoundingBoxFilter():
         self.have_projections = False
         rospy.Subscriber('/extreme_vertex_projections', PointCloud, self.projections_callback)
 
-        if not self.only_record:
-            self.bridge = CvBridge()
-            self.sub_image = rospy.Subscriber('/camera/rgb/image_color', Image, self.image_callback)
-            self.image_pub = rospy.Publisher('/image_out', Image)
+        self.bridge = CvBridge()
+        self.sub_image = rospy.Subscriber('/camera/rgb/image_color', Image, self.image_callback)
+        self.image_pub = rospy.Publisher('/image_out', Image)
 
     def info_callback(self, info):
         if self.need_info:
@@ -46,33 +47,33 @@ class BoundingBoxFilter():
         if not self.have_projections:
             rospy.loginfo('Got projections! Can now begin filtering.')
             self.have_projections = True
-        if self.only_record:
+
+    def image_callback(self, image):
+        if self.have_projections:
+            self.projections.header.stamp = rospy.Time(0)
+            self.lis.waitForTransform('/camera_rgb_optical_frame', self.projections.header.frame_id, rospy.Time(0), rospy.Duration(3.0))
+            projections = self.lis.transformPointCloud('/camera_rgb_optical_frame', self.projections)  # transform to camera frame
             corners = []
-            for point in self.projections.points:  # project rays onto camera image plane
+            for point in projections.points:  # project rays onto camera image plane
                 u, v = self.model.project3dToPixel((point.x,
                                                     point.y,
                                                     point.z))
                 corners.append((int(u), int(v)))
-            print corners
-            with open(self.file, 'a') as f:
-                pickle.dump((self.projections.header.stamp.to_time(), corners), f)
 
-    def image_callback(self, image):
-        if self.have_projections:
-            array = self.bridge.imgmsg_to_cv2(image, "bgr8")
-            uv_list = []
-            for point in self.projections.points:  # project rays onto camera image plane
-                u, v = self.model.project3dToPixel((point.x,
-                                                    point.y,
-                                                    point.z))
-                uv_list.append([int(u), int(v)])
-            uv_convex = cv2.convexHull(numpy.array(uv_list))  # convex hull algorithm
-            cv2.fillConvexPoly(array, uv_convex, (0, 0, 255))  # fill convex hull
-            for [u, v] in uv_list:
-                cv2.circle(array, (int(u), int(v)), 3, (255, 0, 0))  # draw circles at vertices for debugging
-            image_new = self.bridge.cv2_to_imgmsg(array, "bgr8")
-            image_new.header.stamp = rospy.Time.now()
-            self.image_pub.publish(image_new)
+            if self.only_record:
+                with open(self.file, 'a') as f:
+                    pickle.dump((projections.header.stamp.to_time(), corners), f)
+                    rospy.loginfo('RECORDED FILTER POINTS!')
+
+            else:
+                array = self.bridge.imgmsg_to_cv2(image, "bgr8")
+                corners_convex = cv2.convexHull(numpy.array(corners))  # convex hull algorithm
+                cv2.fillConvexPoly(array, corners_convex, (0, 0, 255))  # fill convex hull
+                for [u, v] in corners:
+                    cv2.circle(array, (int(u), int(v)), 3, (255, 0, 0))  # draw circles at vertices for debugging
+                image_new = self.bridge.cv2_to_imgmsg(array, "bgr8")
+                image_new.header.stamp = rospy.Time.now()
+                self.image_pub.publish(image_new)
     
 
 if __name__ == '__main__':

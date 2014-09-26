@@ -26,10 +26,10 @@ class AmclParser():
         if use_particles:
             rospy.loginfo('Subscribing to cloud of AMCL poses...')
             rospy.logwarn('Ignoring any specified confidence levels!')
-            rospy.Subscriber('/particlecloud_republish', PoseArray, self.particle_callback)
+            rospy.Subscriber('/particlecloud', PoseArray, self.particle_callback)
         else:
             rospy.loginfo('Subscribing to AMCL-estimated pose with covariance.')
-            rospy.Subscriber('/amcl_pose_republish', PoseWithCovarianceStamped, self.covariance_callback)
+            rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.covariance_callback)
 
 
     def particle_callback(self, poses):
