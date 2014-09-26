@@ -127,6 +127,7 @@ class ExtremeViewpointFinder():
 
         camera_views = self.lis.transformPointCloud('/camera_rgb_optical_frame', base_views)  # transform to camera frame
 
+        camera_views.header.stamp = rospy.Time.now()  # close enough
         self.pub.publish(camera_views)
         #self.pub.publish(base_views)  # FOR DEBUG ONLY
         

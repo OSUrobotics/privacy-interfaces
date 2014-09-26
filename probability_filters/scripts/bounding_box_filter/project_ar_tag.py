@@ -27,22 +27,24 @@ class ARTagCornerGrabber():
             rospy.sleep(0.01)  # block until have CameraInfo
 
         self.corners = []
-        #rospy.Subscriber('/camera/rgb/image_color', Image, self.image_callback)
+        rospy.Subscriber('/camera/rgb/image_color', Image, self.image_callback, queue_size=1)
 
-        while not rospy.is_shutdown():
-            self.get_tag_frame()
+        #while not rospy.is_shutdown():
+        #    self.get_tag_frame()
 
     def image_callback(self, image_msg):
         print 'Causing an image to be!'
         image = self.bridge.imgmsg_to_cv2(image_msg)
-        if len(self.marker) > 0:
-            cv2.circle(image, self.marker, 3, (0,255,0), -1)
+
+        #if len(self.marker) > 0:
+        #    cv2.circle(image, self.marker, 3, (0,255,0), -1)
+
+        self.get_tag_frame(image_msg.header.stamp)
 
         if len(self.corners) > 0:
-            print self.corners
             for corner in self.corners:
                 cv2.circle(image, corner, 3, (255,0,255), -1)
-            #self.corners = []
+            self.corners = []  # clear the corners
                 
         cv2.imshow('Image with AR tag corners shown', image)
         cv2.waitKey(1)
@@ -62,7 +64,7 @@ class ARTagCornerGrabber():
                                                       marker.pose.pose.position.z))
                     self.marker = tuple(int(el) for el in uv)
 
-    def get_tag_frame(self):
+    def get_tag_frame(self, time):
         print 'Updating tf frame!'
         corners = []
         d = 0.048  # half a side length
@@ -71,9 +73,9 @@ class ARTagCornerGrabber():
         if self.lis.frameExists(frame_id):
             corner = PointStamped()
             corner.header.frame_id = frame_id
-            corner.header.stamp = rospy.Time.now()
+            corner.header.stamp = time
             try:
-                self.lis.waitForTransform(target_frame, frame_id, rospy.Time.now(), rospy.Duration(0.5))
+                self.lis.waitForTransform(target_frame, frame_id, time, rospy.Duration(3.0))
                 for dx, dy in zip([d, d, -d, -d], [-d, d, -d, d]):
                     corner.point.x = dx
                     corner.point.y = dy
@@ -83,8 +85,9 @@ class ARTagCornerGrabber():
                                                       corner_cam_frame.point.y,
                                                       corner_cam_frame.point.z))
                     corners.append(tuple(int(el) for el in uv))
+                self.corners = corners                
                 with open(self.file, 'a') as f:
-                    pickle.dump((corner.header.stamp.to_time(), corners), f)
+                    pickle.dump((time.to_time(), corners), f)
             except tf.Exception:
                 rospy.loginfo('Could not do coordinate transformation.')
         else:

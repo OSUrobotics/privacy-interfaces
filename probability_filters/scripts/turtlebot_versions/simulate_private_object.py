@@ -5,7 +5,6 @@ from geometry_msgs.msg import PointStamped, Point32, PolygonStamped, Vector3Stam
 import tf
 from math import pi
 
-
 class SimulatedObject():
     def __init__(self):
 
@@ -20,60 +19,51 @@ class SimulatedObject():
         rospy.loginfo('Running object simulator...now!')
         
         #self.object_location = self.get_object_location()
+        #print self.object_location
+        self.object_location = ((-0.56316, -1.1028, 0.46449),
+                                (0.61612, 0.28192, 0.66879, -0.30602))
+
 
         r = rospy.Rate(30)
         i = 0
         while not rospy.is_shutdown():
-            self.update_polygon(0.15)
+            self.update_polygon(0.215, 0.245)
             self.send()
             r.sleep()
 
     def send(self):
         """ Broadcast TF frames and Publish stuff. """
         #self.br.sendTransform(self.object_location,
-        self.br.sendTransform((3.30, 1.35, 0.45),
-                              (0.0, 0.0, 0.0, 1.0),  # rotation doesn't matter
+        self.br.sendTransform(self.object_location[0],
+                              self.object_location[1],
                               rospy.Time.now(),
                               '/private_object',
                               '/map')
         self.pub_polygon.publish(self.polygon)
 
     def get_object_location(self):
-        """ Transform object location from robot frame to map frame. """
-        obj_loc = PointStamped()
-        obj_loc.header.frame_id = '/camera_rgb_optical_frame'
-        obj_loc.header.stamp = rospy.Time(0)
-        obj_loc.point.x =  0.0
-        obj_loc.point.y = -0.2
-        obj_loc.point.z =  1.5
-
-        map_frame = '/map'
-        self.lis.waitForTransform(obj_loc.header.frame_id, 
-                                  map_frame,
-                                  rospy.Time(0), 
-                                  rospy.Duration(3.0))
-        obj_loc_pt = self.lis.transformPoint(map_frame, obj_loc)
-        obj_loc_tuple = (obj_loc_pt.point.x,
-                         obj_loc_pt.point.y,
-                         obj_loc_pt.point.z)
-
-        return obj_loc_tuple
+        """ Transform AR Tag location into map frame. """
+        frame_id = 'ar_marker_203'
+        target_frame = '/map'
+        #if self.lis.frameExists(frame_id):
+        self.lis.waitForTransform(target_frame, frame_id, rospy.Time.now(), rospy.Duration(5.0))
+        translation, rotation = self.lis.lookupTransform(target_frame, 'ar_marker_203', rospy.Time.now())
+        return translation, rotation
         
-    def update_polygon(self, s):
+    def update_polygon(self, w, h):
         self.polygon = PolygonStamped()  # erase old polygon
         self.polygon.header.frame_id = '/private_object'
         self.polygon.header.stamp = rospy.Time.now()
         for i in range(4):  # add four vertices
             self.polygon.polygon.points.append(Point32())
-        r = s / 2.0  # radius = 1/2 * side length
-        self.polygon.polygon.points[0].x = -1 * r
-        self.polygon.polygon.points[0].y = -1 * r
-        self.polygon.polygon.points[1].x =      r
-        self.polygon.polygon.points[1].y = -1 * r
-        self.polygon.polygon.points[2].x =      r
-        self.polygon.polygon.points[2].y =      r
-        self.polygon.polygon.points[3].x = -1 * r
-        self.polygon.polygon.points[3].y =      r
+        self.polygon.polygon.points[0].x = -1 * w / 2
+        self.polygon.polygon.points[0].y = -1 * h / 2
+        self.polygon.polygon.points[1].x =      w / 2
+        self.polygon.polygon.points[1].y = -1 * h / 2
+        self.polygon.polygon.points[2].x =      w / 2
+        self.polygon.polygon.points[2].y =      h / 2
+        self.polygon.polygon.points[3].x = -1 * w / 2
+        self.polygon.polygon.points[3].y =      h / 2
         
         # Transform into /map frame
         for i in range(len(self.polygon.polygon.points)):

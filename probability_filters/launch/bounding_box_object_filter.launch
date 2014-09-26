@@ -2,8 +2,8 @@
 
 	<!-- AMCL PARSER -->
 	<node pkg="probability_filters" type="parse_amcl_into_ranges.py" name="amcl_parser" output="screen" >
-	      <param name="use_particles" value="True" />
-	      <param name="confidence_in_sigmas" value="2" />
+	      <param name="use_particles" value="False" />
+	      <param name="confidence_in_sigmas" value="1.5" />
 	</node>
 
 	<!-- TRANSFORM OBJECT BOUNDS TO /map FRAME -->
@@ -17,6 +17,9 @@
 	<node pkg="probability_filters" type="find_extreme_viewpoints.py" name="extreme_viewpoint_finder" output="screen" />
 
 	<!-- BOUNDING BOX OBJECT FILTER -->
-	<node pkg="probability_filters" type="bounding_box_object_filter.py" name="bounding_box_filter" output="screen" />
+	<arg name="only_record" default="False"	/>
+	<node pkg="probability_filters" type="bounding_box_object_filter.py" name="bounding_box_filter" output="screen" >
+	      <param name="only_record" value="$(arg only_record)" />
+	</node>
 
 </launch>
