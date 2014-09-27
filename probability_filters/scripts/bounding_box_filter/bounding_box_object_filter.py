@@ -62,7 +62,7 @@ class BoundingBoxFilter():
 
             if self.only_record:
                 with open(self.file, 'a') as f:
-                    pickle.dump((projections.header.stamp.to_time(), corners), f)
+                    pickle.dump((rospy.Time.now().to_time(), corners), f)
                     rospy.loginfo('RECORDED FILTER POINTS!')
 
             else:

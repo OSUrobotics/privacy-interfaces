@@ -20,7 +20,7 @@ class SimulatedObject():
         
         #self.object_location = self.get_object_location()
         #print self.object_location
-        self.object_location = ((-0.56316, -1.1028, 0.46449),
+        self.object_location = ((-0.56316, -1.1028, 0.44449),#0.46449),
                                 (0.61612, 0.28192, 0.66879, -0.30602))
 
 
@@ -56,15 +56,16 @@ class SimulatedObject():
         self.polygon.header.stamp = rospy.Time.now()
         for i in range(4):  # add four vertices
             self.polygon.polygon.points.append(Point32())
-        self.polygon.polygon.points[0].x = -1 * w / 2
-        self.polygon.polygon.points[0].y = -1 * h / 2
-        self.polygon.polygon.points[1].x =      w / 2
-        self.polygon.polygon.points[1].y = -1 * h / 2
-        self.polygon.polygon.points[2].x =      w / 2
-        self.polygon.polygon.points[2].y =      h / 2
-        self.polygon.polygon.points[3].x = -1 * w / 2
-        self.polygon.polygon.points[3].y =      h / 2
-        
+        self.polygon.polygon.points[0].x = -1 * h / 2
+        self.polygon.polygon.points[0].y = -1 * w / 2
+        self.polygon.polygon.points[1].x =      h / 2
+        self.polygon.polygon.points[1].y = -1 * w / 2
+        self.polygon.polygon.points[2].x =      h / 2
+        self.polygon.polygon.points[2].y =      w / 2
+        self.polygon.polygon.points[3].x = -1 * h / 2
+        self.polygon.polygon.points[3].y =      w / 2
+
+
         # Transform into /map frame
         for i in range(len(self.polygon.polygon.points)):
             vs = Vector3Stamped()
@@ -85,6 +86,7 @@ class SimulatedObject():
              self.polygon.polygon.points[i].z] = [vs.vector.x,
                                                   vs.vector.y,
                                                   vs.vector.z]
+
 
 if __name__ == "__main__":
 

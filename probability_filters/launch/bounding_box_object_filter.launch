@@ -3,7 +3,7 @@
 	<!-- AMCL PARSER -->
 	<node pkg="probability_filters" type="parse_amcl_into_ranges.py" name="amcl_parser" output="screen" >
 	      <param name="use_particles" value="False" />
-	      <param name="confidence_in_sigmas" value="0.5" />
+	      <param name="confidence_in_sigmas" value="0.1" />
 	</node>
 
 	<!-- TRANSFORM OBJECT BOUNDS TO /map FRAME -->

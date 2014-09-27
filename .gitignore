@@ -48,3 +48,7 @@ qtcreator-*
 
 # Catkin custom files
 CATKIN_IGNORE
+
+# Other stuff Matt doesn't commit
+*.pickle
+*.bag

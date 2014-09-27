@@ -31,6 +31,7 @@ if __name__ == '__main__':
             except (EOFError, pickle.UnpicklingError):
                 break
     print len(corners)
+    #print corners[0][0], corners[-1][0]
 
     # Break open that bag
     bag = rosbag.Bag(bag_file, 'r')
@@ -39,6 +40,7 @@ if __name__ == '__main__':
 
         # Find nearest set of corners
         time = msg.header.stamp.to_time()
+        #print time
         dt = [abs(frame[0] - time) for frame in corners]
         if min(dt) < 1.0:  # within 1/5 of a second
             index = dt.index(min(dt))
