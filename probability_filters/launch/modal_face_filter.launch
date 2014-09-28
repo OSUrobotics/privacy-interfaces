@@ -1,5 +1,8 @@
 <launch>
 
+	<arg name="transition_time" default="3.0" />
+	<arg name="stillness_radius" default="0.5" />
+
 	<!--LAUNCH KINECT FOR IMAGE-GETTING
 	 (NOTE THAT RENAMING THE CAMERA FIXES A tf PROBLEM)-->
 	<include file="$(find openni_launch)/launch/openni.launch" >
@@ -10,7 +13,14 @@
 	<node pkg="openni_tracker" type="openni_tracker" name="skeleton_tracker" />
 
 	<!--RUN STAND/WALK CLASSIFIER-->
-	<node pkg="probability_filters" type="is_standing_still.py" name="is_standing_still" output="screen" />
-	
+	<node pkg="probability_filters" type="is_standing_still.py" name="is_standing_still" output="screen" >
+	      <param name="transition_time" value="$(arg transition_time)" />
+	      <param name="stillness_radius" value="$(arg stillness_radius)" />
+	</node>
+
+	<!--RUN MODAL FACE FILTER-->
+	<node pkg="probability_filters" type="modal_face_filter.py" name="modal_face_filter" output="screen" >
+	      <param name="stillness_radius" value="$(arg stillness_radius)" />
+	</node>	      
 
 </launch>

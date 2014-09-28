@@ -7,23 +7,24 @@ from std_msgs.msg import Bool, Float32
 from geometry_msgs.msg import PointStamped
 from math import sqrt
 
+
 class StandingStillMeter():
-    def __init__(self, transition_time):
-        """ INPUT: time in seconds a person must remain within one
-        step before we say they are standing still. """
+    def __init__(self, transition_time, stillness_radius):
+        """ A person is standing still if he or she remains within a
+        certain radius (INPUT #2, in meters) for a certain amount of
+        time (INPUT #1, in seconds). """
         self.transition_time = transition_time
+        self.stillness_radius = stillness_radius
         
         self.lis = tf.TransformListener()
         
         self.is_still = False
-        self.need_step_size = True
         self.torso_history = []  # center of mass position buffer
         self.time_history = []  # ...and associated time values (approximate)
         self.have_sufficient_torso_history = False
 
         self.pub_stillness = rospy.Publisher('/is_standing_still', Bool)
-        self.pub_torso = rospy.Publisher('/torso', PointStamped)
-        self.pub_step = rospy.Publisher('/step_length', Float32)
+        self.pub_torso = rospy.Publisher('/torso_location', PointStamped)
 
     def get_skeleton(self):
         self.skelly = {'head_1': (),
@@ -42,32 +43,17 @@ class StandingStillMeter():
                        'right_knee_1': (),
                        'right_foot_1': ()}
         for joint in self.skelly.keys():
-            translation, rotation = self.lis.lookupTransform(joint, '/openni_depth_frame', rospy.Time(0))
+            translation, rotation = self.lis.lookupTransform('/openni_rgb_optical_frame', joint, rospy.Time(0))
             self.skelly[joint] = list(translation)
 
     def publish_torso_msg(self):
         self.torso_msg = PointStamped()
-        self.torso_msg.header.frame_id = '/openni_depth_frame'
+        self.torso_msg.header.frame_id = '/openni_rgb_optical_frame'
         self.torso_msg.header.stamp = rospy.Time.now()
         [self.torso_msg.point.x,
          self.torso_msg.point.y,
          self.torso_msg.point.z] = self.skelly['torso_1']
         self.pub_torso.publish(self.torso_msg)
-
-    def estimate_step_size(self):
-        left = [foot - hip for foot, hip in zip(self.skelly['left_foot_1'], self.skelly['left_hip_1'])]
-        length_left = sqrt(sum([el**2 for el in left]))
-
-        right = [foot - hip for foot, hip in zip(self.skelly['right_foot_1'], self.skelly['right_hip_1'])]
-        length_right = sqrt(sum([el**2 for el in right]))
-
-        if abs(length_left - length_right) < 0.20:  # leg lengths don't differ by over 20cm
-            self.step_length = (length_left + length_right) / 2  # arithmetic mean
-            self.step_msg = Float32()
-            self.step_msg.data = self.step_length
-            self.need_step_size = False
-        else:
-            rospy.logerr('Leg lengths were too dissimilar: {0}m vs. {1}m'.format(length_left, length_right))
 
     def publish_whether_still(self):
         # Append newest measurement
@@ -76,7 +62,7 @@ class StandingStillMeter():
 
         # Check newest vs. oldest
         # If distance is too big, pop the oldest and repeat
-        while sqrt(sum([(new - old)**2 for old, new in zip(self.torso_history[0], self.torso_history[-1])])) > self.step_length:
+        while sqrt(sum([(new - old)**2 for old, new in zip(self.torso_history[0], self.torso_history[-1])])) > self.stillness_radius:
             self.torso_history.pop(0)
             self.time_history.pop(0)
 
@@ -105,11 +91,7 @@ class StandingStillMeter():
                 self.get_skeleton()
                 self.publish_torso_msg()
 
-                if self.need_step_size:
-                    self.estimate_step_size()
-                if not self.need_step_size:
-                    self.pub_step.publish(self.step_msg)
-                    self.publish_whether_still()
+                self.publish_whether_still()
             else:
                 if not warned:
                     rospy.logwarn('The skeleton you are looking for is not in the /tf tree. Try restarting the tracker!')
@@ -121,5 +103,8 @@ class StandingStillMeter():
 if __name__ == "__main__":
 
     rospy.init_node('is_standing_still')
-    meter = StandingStillMeter(3.0)
+    transition_time = rospy.get_param('transition_time', 3.0)
+    stillness_radius = rospy.get_param('stillness_radius', 0.5)
+    meter = StandingStillMeter(transition_time,
+                               stillness_radius)
     meter.run()
