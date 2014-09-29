@@ -2,8 +2,7 @@
 
 	<!-- AMCL PARSER -->
 	<node pkg="probability_filters" type="parse_amcl_into_ranges.py" name="amcl_parser" output="screen" >
-	      <param name="use_particles" value="False" />
-	      <param name="confidence_in_sigmas" value="0.1" />
+	      <param name="confidence" value="0.50" />
 	</node>
 
 	<!-- TRANSFORM OBJECT BOUNDS TO /map FRAME -->
@@ -13,8 +12,8 @@
 	      <remap from="polygon_out" to="object_bounds_map" />
 	</node>
 
-	<!-- EXTREME VIEWPOINT FINDER -->
-	<node pkg="probability_filters" type="find_extreme_viewpoints.py" name="extreme_viewpoint_finder" output="screen" />
+	<!-- OBJECT PROJECTOR -->
+	<node pkg="probability_filters" type="project_object_onto_poses.py" name="object_projector" output="screen" />
 
 	<!-- BOUNDING BOX OBJECT FILTER -->
 	<arg name="only_record" default="False"	/>

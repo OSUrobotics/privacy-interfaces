@@ -31,7 +31,7 @@ class BoundingBoxFilter():
         rospy.loginfo('Got CameraInfo! Proceeding to filter.')
 
         self.have_projections = False
-        rospy.Subscriber('/extreme_vertex_projections', PointCloud, self.projections_callback)
+        rospy.Subscriber('/object_vertex_projections', PointCloud, self.projections_callback)
 
         self.bridge = CvBridge()
         self.sub_image = rospy.Subscriber('/camera/rgb/image_color', Image, self.image_callback)
