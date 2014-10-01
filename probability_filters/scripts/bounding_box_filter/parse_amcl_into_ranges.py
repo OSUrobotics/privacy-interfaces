@@ -35,7 +35,7 @@ class AmclParser():
     def particle_callback(self, poses, weights):
         
         # Use Decorate-Sort-Undecorate idiom
-        weights_enumerated = [(weight.data, i) for i, weight in enumerate(weights.weights)]
+        weights_enumerated = [[weight.data, i] for i, weight in enumerate(weights.weights)]
         weights_enumerated.sort(reverse=True)
         for i in range(len(weights_enumerated)):
             if i > 0:
@@ -43,7 +43,7 @@ class AmclParser():
             if weights_enumerated[i][0] > self.confidence:
                 rospy.loginfo('Selected {0} poses.'.format(i+1))
                 break
-        indices = [el[1] for el in weights_enumerated[:i+1]]
+        indices = [el[1] for el in weights_enumerated]
         poses.poses = [poses.poses[index] for index in indices]
         weights.weights = [weights.weights[index] for index in indices]
         self.cloud_pub.publish(poses)
