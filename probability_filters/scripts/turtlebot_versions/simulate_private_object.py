@@ -20,8 +20,8 @@ class SimulatedObject():
         
         #self.object_location = self.get_object_location()
         #print self.object_location
-        self.object_location = ((-0.56316, -1.1028, 0.44449),#0.46449),
-                                (0.61612, 0.28192, 0.66879, -0.30602))
+        self.object_location = ((-0.55482, -1.1364, 0.46802),
+                                (0.61632, 0.32777, 0.63445, -0.33195))
 
 
         r = rospy.Rate(30)
@@ -39,15 +39,22 @@ class SimulatedObject():
                               rospy.Time.now(),
                               '/private_object',
                               '/map')
+        self.br.sendTransform((-0.04704077773999993, 0.18815397351999996, 0.301379371159),
+                              (0.40099994, -0.71826226,  0.47798316, -0.30794739),
+                              rospy.Time.now(),
+                              '/camera',
+                              '/map')
         self.pub_polygon.publish(self.polygon)
 
     def get_object_location(self):
         """ Transform AR Tag location into map frame. """
-        frame_id = 'ar_marker_203'
+        frame_id = '/ar_marker_203'
         target_frame = '/map'
-        #if self.lis.frameExists(frame_id):
-        self.lis.waitForTransform(target_frame, frame_id, rospy.Time.now(), rospy.Duration(5.0))
-        translation, rotation = self.lis.lookupTransform(target_frame, 'ar_marker_203', rospy.Time.now())
+        while not self.lis.frameExists(frame_id):
+            rospy.sleep(0.1)
+            print 'Waiting!'
+        self.lis.waitForTransform(target_frame, frame_id, rospy.Time(0), rospy.Duration(2.0))
+        translation, rotation = self.lis.lookupTransform(target_frame, frame_id, rospy.Time(0))
         return translation, rotation
         
     def update_polygon(self, w, h):
@@ -56,20 +63,21 @@ class SimulatedObject():
         self.polygon.header.stamp = rospy.Time.now()
         for i in range(4):  # add four vertices
             self.polygon.polygon.points.append(Point32())
-        self.polygon.polygon.points[0].x = -1 * h / 2
-        self.polygon.polygon.points[0].y = -1 * w / 2
-        self.polygon.polygon.points[1].x =      h / 2
+        self.polygon.polygon.points[0].x = -1 * h * 3/5
+        self.polygon.polygon.points[0].y = -1 * w / 2 
+        self.polygon.polygon.points[1].x =      h * 2/5 
         self.polygon.polygon.points[1].y = -1 * w / 2
-        self.polygon.polygon.points[2].x =      h / 2
+        self.polygon.polygon.points[2].x =      h * 2/5
         self.polygon.polygon.points[2].y =      w / 2
-        self.polygon.polygon.points[3].x = -1 * h / 2
+        self.polygon.polygon.points[3].x = -1 * h * 3/5
         self.polygon.polygon.points[3].y =      w / 2
 
 
         # Transform into /map frame
+        """
         for i in range(len(self.polygon.polygon.points)):
             vs = Vector3Stamped()
-            vs.header.frame_id = '/camera_rgb_optical_frame'
+            vs.header.frame_id = '/private_object'
             vs.header.stamp = rospy.Time(0)
             [vs.vector.x,
              vs.vector.y,
@@ -87,6 +95,8 @@ class SimulatedObject():
                                                   vs.vector.y,
                                                   vs.vector.z]
 
+        print self.polygon.polygon
+        """
 
 if __name__ == "__main__":
 

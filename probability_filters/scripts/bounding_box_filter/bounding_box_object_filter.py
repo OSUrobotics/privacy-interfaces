@@ -69,8 +69,8 @@ class BoundingBoxFilter():
                 array = self.bridge.imgmsg_to_cv2(image, "bgr8")
                 corners_convex = cv2.convexHull(numpy.array(corners))  # convex hull algorithm
                 cv2.fillConvexPoly(array, corners_convex, (0, 0, 255))  # fill convex hull
-                for [u, v] in corners:
-                    cv2.circle(array, (int(u), int(v)), 3, (255, 0, 0))  # draw circles at vertices for debugging
+                #for [u, v] in corners:
+                #    cv2.circle(array, (int(u), int(v)), 3, (255, 0, 0))  # draw circles at vertices for debugging
                 image_new = self.bridge.cv2_to_imgmsg(array, "bgr8")
                 image_new.header.stamp = rospy.Time.now()
                 self.image_pub.publish(image_new)

@@ -122,25 +122,30 @@ def unpack_pickle(file_ar, file_filter):
 
 if __name__ == "__main__":
 
-    file_ar = 'ar_tag_corners_trial_00.pickle'
+    file_ar = 'ar_tag_corners_weighted_trial_00.pickle'
 
-    files_filter = ['filter_corners_cl_0.0_trial_00.pickle',
-                    'filter_corners_cl_0.1_trial_00.pickle',
-                    #'filter_corners_cl_0.25_trial_00.pickle',
-                    'filter_corners_cl_0.5_trial_00.pickle',
-                    'filter_corners_cl_1.0_trial_00.pickle',
-                    #'filter_corners_cl_1.5_trial_00.pickle',
-                    'filter_corners_cl_2.0_trial_00.pickle',
-                    #'filter_corners_cl_2.5_trial_00.pickle',
-                    #'filter_corners_cl_3.0_trial_00.pickle',
-                    #'filter_corners_cl_3.5_trial_00.pickle',
-                    #'filter_corners_cl_4.0_trial_00.pickle',
-                    #'filter_corners_cl_4.5_trial_00.pickle',
-                    #'filter_corners_cl_5.0_trial_00.pickle'
-                    ]
+    files_filter = ['filter_corners_weighted_mean_trial_00.pickle',
+                    #'filter_corners_weighted_cl_0.000_trial_00.pickle',  # mean + 1
+                    #'filter_corners_weighted_002_poses_trial_00.pickle',  # mean + 2
+                    'filter_corners_weighted_cl_0.005_trial_00.pickle',  # mean + 3
+                    'filter_corners_weighted_cl_0.010_trial_00.pickle',  # mean + 5
+                    'filter_corners_weighted_cl_0.050_trial_00.pickle',  # mean + 24
+                    'filter_corners_weighted_cl_0.100_trial_00.pickle',  # mean + 48
+                    'filter_corners_weighted_cl_0.150_trial_00.pickle',  # mean + 71
+                    'filter_corners_weighted_cl_0.200_trial_00.pickle',  # mean + 95
+                    'filter_corners_weighted_cl_0.250_trial_00.pickle',  # mean + 120
+                    'filter_corners_weighted_cl_0.300_trial_00.pickle',  # mean + 143
+                    'filter_corners_weighted_cl_0.350_trial_00.pickle',  # mean + 168
+                    'filter_corners_weighted_cl_0.400_trial_00.pickle',  # mean + 191
+                    'filter_corners_weighted_cl_0.600_trial_00.pickle',  # mean + 289
+                    'filter_corners_weighted_cl_0.800_trial_00.pickle',  # mean + 390
+                    'filter_corners_weighted_cl_1.000_trial_00.pickle']  # mean + 501
 
-    markers = '.os^*'
-    for file_filter, marker in zip(files_filter, markers):
+    #markers = '.os^*'
+    #colors = 'kgbrmcykgbrmcy'
+    cl_list = [0, 0.005, 0.010, 0.050, 0.100, 0.150, 0.200, 0.250, 0.300, 0.350, 0.400, 0.600, 0.800, 1.000]
+    bad_list = []
+    for file_filter in files_filter:
         print 'Analysing this file: ', file_filter
         metrics = unpack_pickle(file_ar, file_filter)
         # Calculate precision & recall
@@ -149,12 +154,18 @@ if __name__ == "__main__":
         fn = numpy.array(metrics['uncovered']).astype('float')
         precision = tp / (tp + fp)  # how much of the filter is over the object?
         recall = tp / (tp + fn)  # how much of the object is covered?
-        pyplot.plot(recall[-1], precision[-1], marker+'-', label=file_filter[15:21])
+        if metrics['time'][-1] > 1412193810:  # end of the trial, when the robot is still
+            print 'Plotting this file: ', file_filter
+            #print 'Coordinates are: ', recall[-1], precision[-1]
+            bad = 1 - (640*480 - fp[-1] - tp[-1] - fn[-1])/(640*480 - tp[-1] - fn[-1])
+            bad_list.append(bad)
         print
 
-    pyplot.axis([0, 1, 0, 1])
-    pyplot.legend(loc='best')
-    pyplot.xlabel('Recall')
-    pyplot.ylabel('Precision')
-    pyplot.title('Precision-Recall Curve for Probabilistic Privacy Filter')
+    pyplot.plot(cl_list, bad_list, 'k*-', markersize=12, linewidth=3)#, label=file_filter[24:32])
+    pyplot.axis([-0.05, 1.05, 0, 0.08])
+    #pyplot.legend(loc='best')
+    pyplot.xlabel('CONFIDENCE LEVEL', fontsize='x-large')
+    pyplot.ylabel('FALSE POSITIVES', fontsize='x-large')
+    pyplot.grid()
+    #pyplot.title('Precision-Recall Curve for Probabilistic Privacy Filter')
     pyplot.show()

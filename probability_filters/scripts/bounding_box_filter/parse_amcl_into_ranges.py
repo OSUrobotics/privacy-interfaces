@@ -33,21 +33,47 @@ class AmclParser():
 
 
     def particle_callback(self, poses, weights):
+
+        # Construct mean pose
+        how_many = len(poses.poses)
+        mean_pose = Pose()
+        RZ = 0
+        for pose in poses.poses:
+            mean_pose.position.x += pose.position.x / how_many
+            mean_pose.position.y += pose.position.y / how_many
+            mean_pose.position.z += pose.position.z / how_many
+            q = [pose.orientation.x,
+                 pose.orientation.y,
+                 pose.orientation.z,
+                 pose.orientation.w]
+            rx, ry, rz = euler_from_quaternion(q)
+            RZ += rz / how_many
+        [mean_pose.orientation.x,
+         mean_pose.orientation.y,
+         mean_pose.orientation.z,
+         mean_pose.orientation.w] = quaternion_about_axis(RZ, (0,0,1))
         
         # Use Decorate-Sort-Undecorate idiom
-        weights_enumerated = [[weight.data, i] for i, weight in enumerate(weights.weights)]
+        weights_sum = sum([weight.data for weight in weights.weights])
+        #print weights_sum
+        weights_enumerated = [[weight.data / weights_sum, i] for i, weight in enumerate(weights.weights)]
         weights_enumerated.sort(reverse=True)
-        for i in range(len(weights_enumerated)):
-            if i > 0:
-                weights_enumerated[i][0] += weights_enumerated[i-1][0]  # add previous weight
-            if weights_enumerated[i][0] > self.confidence:
-                rospy.loginfo('Selected {0} poses.'.format(i+1))
-                break
-        indices = [el[1] for el in weights_enumerated]
-        poses.poses = [poses.poses[index] for index in indices]
-        weights.weights = [weights.weights[index] for index in indices]
+        if self.confidence == -1:  # just the mean pose
+            poses.poses = [mean_pose]
+        else:
+            for i in range(len(weights_enumerated)):
+                if i > 0:
+                    weights_enumerated[i][0] += weights_enumerated[i-1][0]  # add previous weight
+                if weights_enumerated[i][0] > self.confidence:
+                    rospy.loginfo('Selected {0} poses.'.format(i+1))
+                    break
+            indices = [el[1] for el in weights_enumerated]
+            #poses.poses = [poses.poses[index] for index in indices[:i+1]]
+            poses.poses = [poses.poses[index] for index in indices[:]]  # HACK for figure
+            poses.poses.append(mean_pose)  # append mean pose! 
+            weights.weights = [weights.weights[index] for index in indices[:i+1]]
+            self.weights_pub.publish(weights)
         self.cloud_pub.publish(poses)
-        self.weights_pub.publish(weights)
 
 
 if __name__ == "__main__":

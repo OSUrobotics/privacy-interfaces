@@ -2,7 +2,7 @@
 
 import rospy
 from sensor_msgs.msg import PointCloud
-from geometry_msgs.msg import Point32, PolygonStamped, PoseArray
+from geometry_msgs.msg import Point32, PolygonStamped, PoseArray, PointStamped
 import numpy
 import tf
 from tf.transformations import *
@@ -26,7 +26,7 @@ class ObjectProjector():
 
         rospy.loginfo('Got object bounds! Proceeding to find extreme projections.')
 
-        rospy.Subscriber('/particlecloud_select', PoseArray, self.poses_callback)
+        rospy.Subscriber('/particlecloud_chosen', PoseArray, self.poses_callback)
         
 
     def bounds_callback(self, bounds):
@@ -36,9 +36,6 @@ class ObjectProjector():
 
 
     def poses_callback(self, poses):
-
-        # Get object location in /map frame
-        obj, rotation = self.lis.lookupTransform('/map', '/private_object', rospy.Time(0))
 
         ###### Switch to the POV of the Camera ######
         base_views = PointCloud()
@@ -53,15 +50,33 @@ class ObjectProjector():
             x_rotation, y_rotation, z_rotation = euler_from_quaternion(q)
             w = z_rotation
 
-            for point in self.bounds.polygon.points:  # resolve object bounds here because it'd be costly to do it 125,000 times
+            for point in self.bounds.polygon.points: 
 
-                d = [pose.position.x - obj[0] - point.x,  # viewpoint relative to object *vertex*, /map frame
-                     pose.position.y - obj[1] - point.y]
+                ps = PointStamped()
+                ps.header.frame_id = '/private_object'
+                ps.header.stamp = rospy.Time(0)
+                [ps.point.x,
+                 ps.point.y,
+                 ps.point.z] = [point.x,
+                                 point.y,
+                                 point.z]
+                self.lis.waitForTransform(ps.header.frame_id,
+                                          '/map',
+                                          ps.header.stamp,
+                                          rospy.Duration(3.0))
+                ps = self.lis.transformPoint('/map', ps)
+                obj = [ps.point.x,
+                       ps.point.y,
+                       ps.point.z]
+
+
+                d = [pose.position.x - obj[0],  # viewpoint relative to object *vertex*, /map frame
+                     pose.position.y - obj[1]]
                     
                 ###### Convert to RTY ######
                 # Calculate radius
                 r = numpy.sqrt(d[0]**2 + d[1]**2)
-                offset = [el/r for el in d]  # normalize
+                offset = [-el/r for el in d]  # normalize, reverse direction
                 # Calculate theta (angle of vector from object to robot)
                 theta = numpy.arctan2(-1 * d[1], -1 * d[0])  # positive is counter-clockwise
                 # Calculate all heading vectors!
@@ -70,7 +85,6 @@ class ObjectProjector():
                 cosine = sum([h * o for h, o in zip(heading, offset)])  # calculate dot product by hand
                 sine = heading[0] * offset[1] - heading[1] * offset[0]  # calculate the cross product by hand
                 yaw = -1 * atan2(sine, cosine)  # positive is counter-clockwise
-    
                 if yaw > -pi/2 and yaw < pi/2:  # abort if we're not facing the object vertex
                     
                     # Object *vertex* location from perspective of /base_footprint

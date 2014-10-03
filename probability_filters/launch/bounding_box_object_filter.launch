@@ -2,7 +2,9 @@
 
 	<!-- AMCL PARSER -->
 	<node pkg="probability_filters" type="parse_amcl_into_ranges.py" name="amcl_parser" output="screen" >
-	      <param name="confidence" value="0.50" />
+	      <!-- confidence of -1 means just the mean pose -->
+	      <!-- confidence of 0 means the mean pose plus the most probable pose in the AMCL pose cloud -->
+	      <param name="confidence" value="0" />
 	</node>
 
 	<!-- TRANSFORM OBJECT BOUNDS TO /map FRAME -->
