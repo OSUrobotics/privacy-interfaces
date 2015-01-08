@@ -1,0 +1,17 @@
+<launch>
+
+<!-- Launch Kinect driver with depth_registration ON -->
+<include file="$(find openni_launch)/launch/openni.launch" >
+	 <arg name="depth_registration" value="true" />
+</include>
+
+<!-- Launch Green Hat Finder -->
+<include file="$(find hat_detector)/launch/hatfinder.launch" />
+
+<!-- Run 3D Hat Detector -->
+<node name="hat_detector" pkg="hat_detector" type="DetectHatIn3D.py" output="screen" />
+
+<!-- Run displayer of hatted things -->
+<node name="display_hatted_object" pkg="octomap_imagery" type="display_hatted_object" output="screen" args="0.20 cloud_in:=/camera/depth_registered/points" />
+
+</launch>
