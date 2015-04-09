@@ -12,6 +12,6 @@
 <node name="hat_detector" pkg="hat_detector" type="DetectHatIn3D.py" output="screen" />
 
 <!-- Run displayer of hatted things -->
-<node name="replace_hatted_object" pkg="octomap_imagery" type="replace_hatted_object" output="screen" args="0.20 cloud_in:=/camera/depth_registered/points" />
+<node name="display_hatted_object" pkg="octomap_imagery" type="display_hatted_object" output="screen" args="0.20 cloud_in:=/camera/depth_registered/points" />
 
 </launch>

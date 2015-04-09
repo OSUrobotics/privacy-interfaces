@@ -176,6 +176,13 @@ target_link_libraries(replace_hatted_object
  )
 add_dependencies(replace_hatted_object octomap_imagery_gencpp)
 
+add_executable(redact_hatted_object src/redact_hatted_object.cpp)
+target_link_libraries(redact_hatted_object
+  ${PCL_LIBRARIES}  
+  ${catkin_LIBRARIES} 
+ )
+add_dependencies(redact_hatted_object octomap_imagery_gencpp)
+
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
