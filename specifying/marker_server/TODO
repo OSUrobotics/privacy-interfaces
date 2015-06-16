@@ -1,0 +1,5 @@
+Implement a single marker type...I recommend sticky notes:
+- Make a detector (in a separate package)
+- Somehow distinguish between modes (vertical/horizontal/object) -- fake it if need be
+- Visualize it in RViz
+- Maybe use RGBD-SLAM with a handheld Kinect and make it a pretty demo
