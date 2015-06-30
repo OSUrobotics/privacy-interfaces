@@ -12,6 +12,8 @@
 
 // From PCL tutorials: pointclouds.org/documentation/tutorials
 #include <region_finders/estimate_plane.hpp>
+#include <region_finders/get_plane_bounds.hpp>
+#include <region_finders/triangulate_pointcloud.hpp>
 
 // Globals
 ros::Publisher pub_cloud;
@@ -62,10 +64,14 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_in)
 	    << plane[2] << "," 
 	    << plane[3] << std::endl;
 
-  // Refine that plane
-  
+  // Get plane bounds
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_bounds = get_plane_bounds(plane, cloud_in);
 
-  pub_cloud.publish (cloud_in);
+  // Triangulate them
+  pcl::PolygonMesh triangles = triangulate_pointcloud(cloud_bounds);
+
+  // Publish mesh of bounds as well as plane parameters
+  pub_cloud.publish (cloud_bounds);
 }
 
 
