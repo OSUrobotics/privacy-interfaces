@@ -31,7 +31,6 @@ pcl::PolygonMesh triangulate_pointcloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr c
   pcl::PolygonMesh triangles;
 
   // Set the maximum distance between connected points (maximum edge length)
-
   gp3.setSearchRadius (0.025);
 
   // Set typical values for the parameters

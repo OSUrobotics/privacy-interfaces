@@ -9,7 +9,8 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/surface/convex_hull.h>
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr get_plane_bounds(Eigen::Vector4f plane, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr get_plane_bounds(Eigen::Vector4f plane, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_hull, std::vector<pcl::Vertices> &vertices)
+// function parameters "cloud_hull" and "vertices" are outputs. Parameter "vertices" is passed by reference.
 {
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_inliers (new pcl::PointCloud<pcl::PointXYZRGB>);
 
@@ -24,10 +25,9 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr get_plane_bounds(Eigen::Vector4f plane, p
             << inliers.size() << " inliers." << std::endl;
 
   // Create a Convex Hull representation of the inliers
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_hull (new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::ConvexHull<pcl::PointXYZRGB> chull;
   chull.setInputCloud (cloud_inliers);
-  chull.reconstruct (*cloud_hull);
+  chull.reconstruct (*cloud_hull, vertices);
 
   std::cerr << "Convex hull has: " << cloud_hull->points.size ()
             << " data points." << std::endl;

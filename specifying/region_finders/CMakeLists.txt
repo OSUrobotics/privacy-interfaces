@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   pcl_conversions
   pcl_ros
+  shape_tools
 )
 
 ## System dependencies are found with CMake's conventions
