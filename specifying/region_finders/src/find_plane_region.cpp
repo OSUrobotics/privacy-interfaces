@@ -73,7 +73,7 @@ void cloud_callback (pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_in)
   // Get plane bounds and mesh them
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_bounds (new pcl::PointCloud<pcl::PointXYZRGB> ());
   std::vector<pcl::Vertices> vertices;  // for a meshed version of the hull
-  get_plane_bounds(plane, cloud_in, cloud_bounds, vertices);
+  get_plane_bounds(plane, cloud_in, clicked_point, cloud_bounds, vertices);
 
   // Convert to ROS msg types
   // 1) Eigen::Vector4f to shape_msgs::Plane::Ptr
