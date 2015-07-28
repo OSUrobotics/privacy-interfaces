@@ -1,8 +1,10 @@
 <?xml version="1.0"?>
 <package>
-  <name>orange_cone_detector</name>
+  <name>color_blob_detector</name>
   <version>0.0.0</version>
-  <description>Detects orange traffic cones, or at least the (toy) ones I have. </description>
+  <description>Detects markers that consist of a blob of solid
+color. Examples are orange traffic cones, green post-it notes, and the
+pink "magic wand." </description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -19,7 +21,7 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/orange_cone_detector</url> -->
+  <!-- <url type="website">http://wiki.ros.org/color_blob_detector</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
