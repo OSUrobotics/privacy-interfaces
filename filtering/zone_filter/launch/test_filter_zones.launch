@@ -1,0 +1,18 @@
+<launch>
+
+	<!-- Make /tf work -->
+	<node pkg="tf" type="static_transform_publisher" 
+	args="2 0 1 0 0 0 1 /base_link /zone 10" 
+	output="screen" name="zone_tf_publisher" />
+
+	<!-- Compress images using theora. This helps a lot. -->
+	<node pkg="image_transport" type="republish" 
+	args="raw in:=/wide_stereo/right/image_rect_color/filtered theora out:=/wide_stereo/right/image_rect_color/filtered" 
+	output="screen" name="filtered_image_compressor" />
+
+	<!-- Test out the zone filtering code! -->
+	<node pkg="zone_filter" type="test_filter_zones.py" name="test_filter_zones" output="screen" />
+
+	
+
+</launch>
