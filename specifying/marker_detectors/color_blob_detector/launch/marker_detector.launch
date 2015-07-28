@@ -2,10 +2,10 @@
 
   <!-- Location of the cmvision color file -->
   <param name="cmvision/color_file" type="string" 
-         value="$(find orange_cone_detector)/cone.txt" />
+         value="$(find color_blob_detector)/markers.txt" />
 
   <!-- Turn debug output on or off -->
-  <param name="cmvision/debug_on" type="bool" value="false"/>
+  <param name="cmvision/debug_on" type="bool" value="true"/>
 
   <!-- Turn color calibration on or off -->
   <param name="cmvision/color_cal_on" type="bool" value="false"/>
