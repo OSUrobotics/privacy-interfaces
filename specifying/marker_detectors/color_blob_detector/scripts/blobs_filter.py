@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import rospy
+from sensor_msgs.msg import Image
 from cmvision.msg import Blobs
+from cv_bridge import CvBridge
+import cv2
 import copy
 
 
@@ -89,6 +92,8 @@ def filter_blobs_by_count(blobs):
 
     return blobs_dict
 
+
+blobs_to_show = []
         
 def blobs_callback(blobs_in):
     blobs_goldilox = filter_blobs_by_size(blobs_in)
@@ -98,9 +103,35 @@ def blobs_callback(blobs_in):
         if key in blobs_dict:  # ...if we got any blobs by that name...
             publishers[key].publish(blobs_dict[key])  # ...publish them!
 
+    if debug_on:
+        global blobs_to_show
+        if '_ALL' in blobs_dict:
+            blobs_to_show = blobs_dict['_ALL']
+        else:
+            blobs_to_show = []
+
+
+bridge = CvBridge()
+
+def show_blobs(image):
+    if debug_on:
+        image_cv = bridge.imgmsg_to_cv2(image)
+        if blobs_to_show:
+            for blob in blobs_to_show.blobs:
+                cv2.rectangle(image_cv, 
+                              (blob.left, blob.top), (blob.right, blob.bottom), 
+                              (blob.blue, blob.green, blob.red))
+        cv2.imshow('Image with Filtered Blobs', image_cv)
+        cv2.waitKey(1)
+
+
+debug_on = False
 
 if __name__ == '__main__':
     rospy.init_node('blobs_filter')
+    debug_on = rospy.get_param('blobs_filter/debug_on', False)
     collapse_filters()
     rospy.Subscriber('/blobs', Blobs, blobs_callback)
+    if debug_on:
+        rospy.Subscriber('/camera/rgb/image_rect_color', Image, show_blobs)
     rospy.spin()
