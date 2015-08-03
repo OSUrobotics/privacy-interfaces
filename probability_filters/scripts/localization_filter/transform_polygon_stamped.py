@@ -19,7 +19,7 @@ class PolygonTransformer():
         self.lis.waitForTransform(self.target_frame, 
                                   v.header.frame_id, 
                                   v.header.stamp, 
-                                  rospy.Duration(3.0))
+                                  rospy.Duration(1.0))
         for point in polygon.polygon.points:
             [v.vector.x,
              v.vector.y,

@@ -68,8 +68,8 @@ class AmclParser():
                     rospy.loginfo('Selected {0} poses.'.format(i+1))
                     break
             indices = [el[1] for el in weights_enumerated]
-            #poses.poses = [poses.poses[index] for index in indices[:i+1]]
-            poses.poses = [poses.poses[index] for index in indices[:]]  # HACK for figure
+            poses.poses = [poses.poses[index] for index in indices[:i+1]]
+            #poses.poses = [poses.poses[index] for index in indices[:]]  # HACK for figure
             poses.poses.append(mean_pose)  # append mean pose! 
             weights.weights = [weights.weights[index] for index in indices[:i+1]]
             self.weights_pub.publish(weights)
