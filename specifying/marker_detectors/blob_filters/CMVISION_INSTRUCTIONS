@@ -1,0 +1,17 @@
+How I acquired the orange cone with the cmvision package in ROS Hydro.
+
+START HERE.
+> rosrun cmvision colorgui image:=/camera/rgb/image_color
+
+WARNING: the colors in my Kinect appear flipped around in the GUI; orange looks like blue. This is not the case in rqt_image_view; everything looks fine there.
+
+Click on the cone in various lighting conditions. Avoid reflections of lights, etc. Copy the YUV thresholds into a new colors.txt file, which I named cone.txt. 
+
+Make a local copy of $(find cmvision)/cmvision.launch. Change the path to the colors.txt file (here, to your cone.txt file in your own package) and also change the image topic to the Kinect's.
+
+>catkin_make # ...your workspace to generate devel/setup.bash, if necessary
+>source .../your_ws/devel/setup.bash
+>roslaunch your_package your_launch_file.launch
+
+
+

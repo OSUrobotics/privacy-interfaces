@@ -1,0 +1,16 @@
+About the RViz config file clicked_point.rviz:
+
+HOW TO RUN
+-------------
+[connect a Kinect to your computer]
+roslaunch openni_launch openni.launch
+[open RViz]
+[File -> Open Config -> clicked_point.rviz]
+
+WHAT IT DOES
+-------------
+The RViz "Publish Point" button publishes a 3D position on the topic "/clicked_point" whenever the user clicks on a so-called "object" in the RViz viewer window. This RViz configuration allows the user to see the *image* from the Kinect using the Camera plugin, but for clicks on that *image* to return 3D points in the *point cloud*. The "Publish Point" icon is only visible for the user when the mouse is hovering over a valid point in the pointcloud...or a TF frame, or a gridline, or any other "object" in RViz. 
+
+WHAT IT'S FOR
+------------
+Use this if you want to click on a point on a 2D image, and get back a 3D position from the depth sensor. I intend to use it to place virtual privacy markers. 
