@@ -17,6 +17,9 @@ from color_model import color_model
 #This package integrates cmvision with tf and localization; now we can track color in 3D.
 class color_controller():
 	def __init__(self, publish_tf):
+
+		self.publish_tf = publish_tf
+
 		#To take our Ros Image into a cv message and subsequently a numpy array.
 		self.bridge = CvBridge()        
 
@@ -33,6 +36,11 @@ class color_controller():
 
 		#We are using a depth image to get depth information of what we're tracking.
 		rospy.Subscriber("depth_image", Image, self.depth_callback)
+		self.hasDepthImage = False
+
+		while not self.hasDepthImage:
+			print "waiting on depth image."
+			rospy.sleep(0.5)
 
 		#This package is just an extension of cmvision to provide tf tracking of the blobs provided by cmvision. 
 		rospy.Subscriber('blobs', Blobs, self.blob_callback)
@@ -44,9 +52,6 @@ class color_controller():
 
 		#Republish each blob as part of a blob.
 		self.blob_pub = rospy.Publisher('/blobs_3d', Blobs3d)
-
-		self.publish_tf = publish_tf
-
 
 
 		#blobs is received from running cmvision. It's color blobs as defined by our color file.
@@ -80,6 +85,8 @@ class color_controller():
 
 
 	def depth_callback(self, image):
+		if not self.hasDepthImage:
+			self.hasDepthImage = True
 		image_cv = self.bridge.imgmsg_to_cv(image, image.encoding)
 		image_cv2 = np.array(image_cv, dtype=np.float32)
 		self.depth_image = image_cv2
