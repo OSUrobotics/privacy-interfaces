@@ -2,7 +2,7 @@
 
 import rospy
 from sensor_msgs.msg import Image
-from cmvision.msg import Blobs
+from cmvision_3d.msg import Blobs3d
 from cv_bridge import CvBridge
 import cv2
 import copy
@@ -34,10 +34,10 @@ count_filter = {'_ALL': 10,
                'LimeGreenNote': 2,
                'PinkWand': 1}
 
-publishers = {'_ALL': rospy.Publisher('/blobs/filtered/all', Blobs),
-               'OrangeCone': rospy.Publisher('/blobs/filtered/orange_cone', Blobs),
-               'LimeGreenNote': rospy.Publisher('/blobs/filtered/lime_green_note', Blobs),
-               'PinkWand': rospy.Publisher('/blobs/filtered/pink_wand', Blobs)}
+publishers = {'_ALL': rospy.Publisher('/blobs_3d/filtered/all', Blobs3d),
+               'OrangeCone': rospy.Publisher('/blobs_3d/filtered/orange_cone', Blobs3d),
+               'LimeGreenNote': rospy.Publisher('/blobs_3d/filtered/lime_green_note', Blobs3d),
+               'PinkWand': rospy.Publisher('/blobs_3d/filtered/pink_wand', Blobs3d)}
 
 
 def collapse_filters():
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     rospy.init_node('blobs_filter')
     debug_on = rospy.get_param('blobs_filter/debug_on', False)
     collapse_filters()
-    rospy.Subscriber('/blobs', Blobs, blobs_callback)
+    rospy.Subscriber('/blobs_3d', Blobs3d, blobs_callback)
     if debug_on:
         rospy.Subscriber('/camera/rgb/image_rect_color', Image, show_blobs)
     rospy.spin()
