@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>color_blob_detector</name>
+  <name>blob_filters</name>
   <version>0.0.0</version>
   <description>Detects markers that consist of a blob of solid
 color. Examples are orange traffic cones, green post-it notes, and the
@@ -21,7 +21,7 @@ pink "magic wand." </description>
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/color_blob_detector</url> -->
+  <!-- <url type="website">http://wiki.ros.org/blob_filters</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->

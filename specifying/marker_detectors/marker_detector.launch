@@ -1,0 +1,18 @@
+<launch>
+
+  <!-- Launch cmvision_3d -->
+  <include file="$(find cmvision_3d)/launch/color_tracker.launch" >
+    <arg name="image" value="camera/rgb/image_color"/>
+    <arg name="depth_image" value="camera/depth_registered/image_raw"/>
+    <arg name="camera_topic" value="/camera/rgb/camera_info"/>
+  </include>
+
+  <!-- Location of the cmvision color file -->
+  <param name="cmvision/color_file" type="string" 
+         value="$(find blob_filters)/markers.txt" />
+
+  <!-- Blob filter -->
+  <param name="blobs_filter/debug_on" type="bool" value="true" />
+  <node name="blobs_filter" type="blobs_filter.py" pkg="blob_filters" output="screen" />
+
+</launch>
