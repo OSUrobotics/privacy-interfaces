@@ -63,8 +63,8 @@ class color_controller():
 		for blob in blobs.blobs:
 			#If we have multiple catches of a single color, we only want to publish the one with the maximum area. Fortunately they are sorted as such.
 			already_published = False
-			if blob.name in self.colors:
-				already_published = False#True  # HACK!
+			#if blob.name in self.colors:  # PUBLISH THEM ALL!
+			#	already_published = False
 
 			self.colors[blob.name] = color_model(blob, self.camera_info, self.parent_frame, self.depth_image, self.cam_model, self.listener, self.broadcaster)
 			

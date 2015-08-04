@@ -5,6 +5,7 @@
     <arg name="image" value="camera/rgb/image_color"/>
     <arg name="depth_image" value="camera/depth_registered/image_raw"/>
     <arg name="camera_topic" value="/camera/rgb/camera_info"/>
+    <arg name="publish_tf" value="false"/>
   </include>
 
   <!-- Location of the cmvision color file -->
