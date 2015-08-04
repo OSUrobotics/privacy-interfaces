@@ -5,6 +5,7 @@ from sensor_msgs.msg import Image
 from cmvision.msg import Blobs
 from cmvision_3d.msg import Blobs3d
 from cv_bridge import CvBridge
+import message_filters
 import cv2
 import copy
 
@@ -35,7 +36,12 @@ count_filter = {'_ALL': 10,
                'LimeGreenNote': 2,
                'PinkWand': 1}
 
-publishers = {'_ALL': rospy.Publisher('/blobs_3d/filtered/all', Blobs3d),
+publishers_2d = {'_ALL': rospy.Publisher('/blobs/filtered/all', Blobs),
+               'OrangeCone': rospy.Publisher('/blobs/filtered/orange_cone', Blobs),
+               'LimeGreenNote': rospy.Publisher('/blobs/filtered/lime_green_note', Blobs),
+               'PinkWand': rospy.Publisher('/blobs/filtered/pink_wand', Blobs)}
+
+publishers_3d = {'_ALL': rospy.Publisher('/blobs_3d/filtered/all', Blobs3d),
                'OrangeCone': rospy.Publisher('/blobs_3d/filtered/orange_cone', Blobs3d),
                'LimeGreenNote': rospy.Publisher('/blobs_3d/filtered/lime_green_note', Blobs3d),
                'PinkWand': rospy.Publisher('/blobs_3d/filtered/pink_wand', Blobs3d)}
@@ -76,17 +82,14 @@ def filter_blobs_by_count(blobs):
     for key in blobs_dict:
         blobs_dict[key].blobs.sort(reverse = True, 
                                    key = lambda blob: blob.area)  # sort by largest area first
-        blobs_dict[key].blobs = blobs_dict[key].blobs[0:count_filter[key]]  # take largest X areas
+        if count_filter[key] != float('inf'):
+            blobs_dict[key].blobs = blobs_dict[key].blobs[0:count_filter[key]]  # take largest X areas
 
     # Reconstruct a msg of all the Blobs (within the count limits)
     if blobs_dict:  # if non-empty dictionary of blobs
         blobs_all = []
         for key, msg in blobs_dict.iteritems():
             blobs_all += msg.blobs
-        #reduce(lambda x,y: x.blobs + y.blobs, 
-        #                   blobs_dict.values())  # concatenate blobs again
-        #if not isinstance(blobs_all, list):
-        #    blobs_all = [blobs_all]
         blobs_dict['_ALL'] = copy.deepcopy(blobs)
         blobs_dict['_ALL'].blobs = blobs_all
         blobs_dict['_ALL'].blob_count = len(blobs_dict['_ALL'].blobs)
@@ -96,18 +99,27 @@ def filter_blobs_by_count(blobs):
 
 blobs_to_show = []
         
-def blobs_callback(blobs_in):
-    blobs_goldilox = filter_blobs_by_size(blobs_in)
-    blobs_dict = filter_blobs_by_count(blobs_goldilox)
+def blobs_callback(blobs_2d, blobs_3d):
+    # 2d
+    blobs_goldilox_2d = filter_blobs_by_size(blobs_2d)
+    blobs_dict_2d = filter_blobs_by_count(blobs_goldilox_2d)
 
-    for key in publishers:  # for each name (and '_ALL')...
-        if key in blobs_dict:  # ...if we got any blobs by that name...
-            publishers[key].publish(blobs_dict[key])  # ...publish them!
+    for key in publishers_2d:  # for each name (and '_ALL')...
+        if key in blobs_dict_2d:  # ...if we got any blobs by that name...
+            publishers_2d[key].publish(blobs_dict_2d[key])  # ...publish them!
+
+    # 3d (yes, this is doing the same work again)
+    blobs_goldilox_3d = filter_blobs_by_size(blobs_3d)
+    blobs_dict_3d = filter_blobs_by_count(blobs_goldilox_3d)
+
+    for key in publishers_3d:  # for each name (and '_ALL')...
+        if key in blobs_dict_3d:  # ...if we got any blobs by that name...
+            publishers_3d[key].publish(blobs_dict_3d[key])  # ...publish them!
 
     if debug_on:
         global blobs_to_show
-        if '_ALL' in blobs_dict:
-            blobs_to_show = blobs_dict['_ALL']
+        if '_ALL' in blobs_dict_2d:
+            blobs_to_show = blobs_dict_2d['_ALL']
         else:
             blobs_to_show = []
 
@@ -119,7 +131,7 @@ def show_blobs(image):
         image_cv = bridge.imgmsg_to_cv2(image)
         if blobs_to_show:
             for blob in blobs_to_show.blobs:
-                cv2.circle(image_cv, (blob.left, blob.top), (blob.right, blob.bottom), 
+                cv2.rectangle(image_cv, (blob.left, blob.top), (blob.right, blob.bottom), 
                               (blob.blue, blob.green, blob.red))
         cv2.imshow('Image with Filtered Blobs', image_cv)
         cv2.waitKey(1)
@@ -127,23 +139,18 @@ def show_blobs(image):
 
 debug_on = False
 
-import message_filters
-
-def callback(twodee, threedee):
-    print twodee.header, threedee.header
 
 if __name__ == '__main__':
     rospy.init_node('blobs_filter')
     debug_on = rospy.get_param('blobs_filter/debug_on', False)
     
+    collapse_filters()
+
     sub_2d = message_filters.Subscriber('/blobs', Blobs)
     sub_3d = message_filters.Subscriber('/blobs_3d', Blobs3d)
     time_syncer = message_filters.TimeSynchronizer([sub_2d, sub_3d], 10)
-    time_syncer.registerCallback(callback)
+    time_syncer.registerCallback(blobs_callback)
 
-    #collapse_filters()
-    #rospy.Subscriber('/blobs_3d', Blobs3d, blobs_callback)
-    
-    #if debug_on:
-    #    rospy.Subscriber('/camera/rgb/image_rect_color', Image, show_blobs)
+    if debug_on:
+        rospy.Subscriber('/camera/rgb/image_rect_color', Image, show_blobs)
     rospy.spin()
