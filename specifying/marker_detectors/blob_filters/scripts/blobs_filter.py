@@ -2,6 +2,7 @@
 
 import rospy
 from sensor_msgs.msg import Image
+from cmvision.msg import Blobs
 from cmvision_3d.msg import Blobs3d
 from cv_bridge import CvBridge
 import cv2
@@ -118,8 +119,7 @@ def show_blobs(image):
         image_cv = bridge.imgmsg_to_cv2(image)
         if blobs_to_show:
             for blob in blobs_to_show.blobs:
-                cv2.rectangle(image_cv, 
-                              (blob.left, blob.top), (blob.right, blob.bottom), 
+                cv2.circle(image_cv, (blob.left, blob.top), (blob.right, blob.bottom), 
                               (blob.blue, blob.green, blob.red))
         cv2.imshow('Image with Filtered Blobs', image_cv)
         cv2.waitKey(1)
@@ -127,11 +127,23 @@ def show_blobs(image):
 
 debug_on = False
 
+import message_filters
+
+def callback(twodee, threedee):
+    print twodee.header, threedee.header
+
 if __name__ == '__main__':
     rospy.init_node('blobs_filter')
     debug_on = rospy.get_param('blobs_filter/debug_on', False)
-    collapse_filters()
-    rospy.Subscriber('/blobs_3d', Blobs3d, blobs_callback)
-    if debug_on:
-        rospy.Subscriber('/camera/rgb/image_rect_color', Image, show_blobs)
+    
+    sub_2d = message_filters.Subscriber('/blobs', Blobs)
+    sub_3d = message_filters.Subscriber('/blobs_3d', Blobs3d)
+    time_syncer = message_filters.TimeSynchronizer([sub_2d, sub_3d], 10)
+    time_syncer.registerCallback(callback)
+
+    #collapse_filters()
+    #rospy.Subscriber('/blobs_3d', Blobs3d, blobs_callback)
+    
+    #if debug_on:
+    #    rospy.Subscriber('/camera/rgb/image_rect_color', Image, show_blobs)
     rospy.spin()
