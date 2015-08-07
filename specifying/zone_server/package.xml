@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>marker_server</name>
+  <name>zone_server</name>
   <version>0.0.0</version>
   <description>This package is the central hub for using physical
 markers to specify private objects and regions. It listens to
@@ -22,7 +22,7 @@ broadcasts to filters and the nav stack. </description>
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/marker_server</url> -->
+  <!-- <url type="website">http://wiki.ros.org/zone_server</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
