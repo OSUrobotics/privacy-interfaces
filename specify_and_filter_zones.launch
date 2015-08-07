@@ -1,0 +1,16 @@
+<launch>
+
+	<!-- ZONE SERVER -->
+	<node name="zone_server" type="zone_server_node.py" pkg="zone_server" output="screen" />
+
+	<!-- MARKER DETECTOR -->
+	<include file="$(find tag_trackers)/launch/marker_detector.launch" />
+
+	<!-- TAG TRACKERS -->
+	<node name="track_physical_markers" type="track_physical_markers.py" pkg="tag_trackers" output="screen" />
+	<!-- wand tracker goes here -->
+
+	<!-- ZONE FILTER -->
+	
+
+</launch>
