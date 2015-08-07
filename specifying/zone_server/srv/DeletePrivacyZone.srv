@@ -1,0 +1,3 @@
+string name  # same as the "name" field of the zone to be deleted
+---
+bool success
