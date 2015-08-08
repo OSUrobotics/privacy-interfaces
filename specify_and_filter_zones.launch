@@ -11,6 +11,6 @@
 	<!-- wand tracker goes here -->
 
 	<!-- ZONE FILTER -->
-	
+	<node name="filter_zones" type="filter_zones.py" pkg="zone_filter" output="screen" />
 
 </launch>

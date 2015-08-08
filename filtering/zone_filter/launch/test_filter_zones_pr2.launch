@@ -11,7 +11,7 @@
 	output="screen" name="filtered_image_compressor" />
 
 	<!-- Test out the zone filtering code! -->
-	<node pkg="zone_filter" type="test_filter_zones.py" name="test_filter_zones" output="screen" />
+	<node pkg="zone_filter" type="test_filter_zones_pr2.py" name="test_filter_zones_pr2" output="screen" />
 
 	
 
