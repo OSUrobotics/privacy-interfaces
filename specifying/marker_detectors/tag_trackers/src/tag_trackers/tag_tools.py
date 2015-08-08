@@ -40,9 +40,14 @@ class Tag():
         zone.name = self.name
         zone.labels.append(self.tagging_mode)
         zone.status = PrivacyZone.ACTIVE_NOW
+
         zone.time_begin = rospy.Time(0)  # active since the beginning of time
         zone.time_end = rospy.Time.now() + rospy.Duration(60*60*24)  # active for one day
-        zone.header = self.header
+
+        zone.header.seq = self.header.seq
+        zone.header.stamp = self.header.stamp
+        zone.header.frame_id = self.name  # established as a tf frame by above method
+
         zone.extents.type = SolidPrimitive.BOX
         zone.extents.dimensions = [0.20, 0.20, 0.20]  # a 20 cm (~8 in) cube, centered around its tf frame
         

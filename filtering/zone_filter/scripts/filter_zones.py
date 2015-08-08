@@ -38,6 +38,7 @@ class ZoneTransformer():
         msg, which is the output data type. """
         cloud = PointCloud()
         cloud.header = polygon.header
+        cloud.header.stamp = rospy.Time(0)  # HACK
         cloud.points = polygon.polygon.points
         self.listener.waitForTransform(frame_target, cloud.header.frame_id, cloud.header.stamp, rospy.Duration(1.0))
         return self.listener.transformPointCloud(frame_target, cloud)
@@ -101,7 +102,6 @@ class ZoneFilter():
 
     def callback_image(self, image):
         # tf zone Polygon at that stamp
-        #self.zone_grabber.zones[0].header.stamp = image.header.stamp  # HACK for timing -- WORKS!
         clouds = self.zone_transformer.transform_polygons(self.zone_grabber.polygons, 
                                                           image.header.frame_id)
 
