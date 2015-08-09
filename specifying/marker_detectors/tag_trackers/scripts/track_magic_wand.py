@@ -2,7 +2,6 @@
 
 import rospy
 from cmvision_3d.msg import Blobs3d
-from geometry_msgs.msg import Point  # this defn will be modified below!
 import tf
 
 from zone_server.msg import PrivacyZone
