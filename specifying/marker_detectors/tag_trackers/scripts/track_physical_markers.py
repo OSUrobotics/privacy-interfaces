@@ -62,7 +62,7 @@ class PhysicalMarkerTracker():
                     is_new_tag = False
                     break  # in case it's close to *two* tags, just update the first one. WARNING: tag names could get switched. 
             if is_new_tag:  # if it doesn't match any existing tags, add it.
-                self.tags.append(Tag('tag_' + str(self.next_name), 
+                self.tags.append(Tag('note_' + str(self.next_name), 
                                      blob.center, 
                                      blobs.header, 
                                      'marker'))  

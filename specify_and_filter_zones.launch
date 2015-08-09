@@ -4,11 +4,11 @@
 	<node name="zone_server" type="zone_server_node.py" pkg="zone_server" output="screen" />
 
 	<!-- MARKER DETECTOR -->
-	<include file="$(find tag_trackers)/launch/marker_detector.launch" />
+	<include file="$(find tag_trackers)/launch/tag_detector.launch" />
 
 	<!-- TAG TRACKERS -->
 	<node name="track_physical_markers" type="track_physical_markers.py" pkg="tag_trackers" output="screen" />
-	<!-- wand tracker goes here -->
+	<node name="track_magic_wand" type="track_magic_wand.py" pkg="tag_trackers" output="screen" />
 
 	<!-- ZONE FILTER -->
 	<node name="filter_zones" type="filter_zones.py" pkg="zone_filter" output="screen" />
