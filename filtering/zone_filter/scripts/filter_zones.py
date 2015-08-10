@@ -121,11 +121,6 @@ class ZoneFilter():
         # For the image:
         image_array = self.bridge.imgmsg_to_cv2(image, desired_encoding='rgb8')  # convert to cv2
 
-        for pixel_cloud in pixel_clouds:
-            for pixel in pixel_cloud:
-                pixel = tuple(int(u) for u in pixel)
-                cv2.circle(image_array, pixel, 3, (255, 255, 0))
-
         # make a blurred copy
         image_blurred = cv2.GaussianBlur(image_array, ksize=(15,15), sigmaX=20)
 
@@ -139,8 +134,15 @@ class ZoneFilter():
         image_array[mask.astype('bool')] = image_blurred[mask.astype('bool')]
         image_array.flags.writeable = False
 
+        # mark zone corners
+        for pixel_cloud in pixel_clouds:
+            for pixel in pixel_cloud:
+                pixel = tuple(int(u) for u in pixel)
+                cv2.circle(image_array, pixel, 1, (255, 255, 0))
+
         # convert back to ROS msg and publish out
         image_out = self.bridge.cv2_to_imgmsg(image_array, encoding='rgb8')
+        image_out.header = image.header  # so it shows up in RViz!
         self.publisher.publish(image_out)
 
 
