@@ -9,8 +9,15 @@
 	<!-- TAG TRACKERS -->
 	<node name="track_physical_markers" type="track_physical_markers.py" pkg="tag_trackers" output="screen" />
 	<node name="track_magic_wand" type="track_magic_wand.py" pkg="tag_trackers" output="screen" />
+	<group> <!-- MOUSE CLICKERY -->
+		<node name="track_mouse_clicks" type="track_mouse_clicks.py" pkg="tag_trackers" output="screen" />
+		<node name="rviz_for_clicking" type="rqt_rviz" pkg="rqt_rviz" args="-d $(find tag_trackers)/clickable_camera_view.rviz" output="log" />
+	</group>
 
 	<!-- ZONE FILTER -->
 	<node name="filter_zones" type="filter_zones.py" pkg="zone_filter" output="screen" />
+
+	<!-- DISPLAY -->
+	<node name="filtered_image_viewer" type="image_view" pkg="image_view" args="image:=/camera/rgb/image_rect_color/filtered" output="screen" />
 
 </launch>
