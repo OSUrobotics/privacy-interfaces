@@ -13,7 +13,7 @@
          value="$(find blob_filters)/markers.txt" />
 
   <!-- Blob filter -->
-  <param name="blobs_filter/debug_on" type="bool" value="true" />
+  <param name="blobs_filter/debug_on" type="bool" value="false" />
   <node name="blobs_filter" type="blobs_filter.py" pkg="blob_filters" output="screen" />
 
 </launch>
