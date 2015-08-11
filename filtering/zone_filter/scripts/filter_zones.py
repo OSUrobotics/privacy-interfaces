@@ -60,6 +60,7 @@ class ZoneGrabber():
 
     def zones_callback(self, zones):
         active_zones = self.get_active_zones(zones)
+        self.zone_labels = [zone.labels for zone in active_zones.zones]
         self.polygons = self.zones_to_polygons(active_zones)
         if not self.polygons_are_ready:
             self.polygons_are_ready = True
@@ -135,10 +136,18 @@ class ZoneFilter():
         image_array.flags.writeable = False
 
         # mark zone corners
-        for pixel_cloud in pixel_clouds:
+        for labels, pixel_cloud in zip(self.zone_grabber.zone_labels, pixel_clouds):
+            if 'marker' in labels:
+                color = (0, 255, 0)  # green for sticky notes
+            elif 'wand' in labels:
+                color = (255, 0, 0)  # red for magic wand
+            elif 'mouse' in labels:
+                color = (0, 0, 255)  # blue for clicking in the GUI
+            else:
+                color = (0, 0, 0)  # black otherwise
             for pixel in pixel_cloud:
                 pixel = tuple(int(u) for u in pixel)
-                cv2.circle(image_array, pixel, 1, (255, 255, 0))
+                cv2.circle(image_array, pixel, 1, color)
 
         # convert back to ROS msg and publish out
         image_out = self.bridge.cv2_to_imgmsg(image_array, encoding='rgb8')
