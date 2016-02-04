@@ -1,0 +1,3 @@
+[submodule "rgbdslam_v2"]
+	path = rgbdslam_v2
+	url = https://github.com/felixendres/rgbdslam_v2.git
