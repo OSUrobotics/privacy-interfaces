@@ -1,1 +1,13 @@
-This is a git submodule. Follow this link to learn how to deal with this: https://github.com/felixendres/rgbdslam_v2.git
+1) This is a git submodule. Follow this link to learn how to deal with this: https://git-scm.com/book/en/v2/Git-Tools-Submodules
+
+2) To get rgbdslam_v2 working, I had to...
+[at top of privacy-interfaces repo directory]
+git submodule add -b hydro https://github.com/felixendres/rgbdslam_v2.git
+rosdep update
+rosdep install rgbdslam
+[edit the CMakeLists file for rgbdslam_v2 according to the answer on Nov 4 '14 by nitekrawler at http://answers.ros.org/question/190688/rgbdslam-v2-catkin_make-error/]
+[go to top of catkin workspace directory]
+catkin_make
+[you may need to run catkin_make again---"if at first you don't succeed..."!]
+source devel/setup.bash
+roslaunch rgbdslam openni+rgbdslam.launch  # win!!!

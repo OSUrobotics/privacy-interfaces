@@ -1,1 +1,7 @@
-octomap_server: builds up a map from PointCloud2 msgs. Need tf from camera to /map. 
+1) octomap_server: builds up a map from PointCloud2 msgs. Need tf from camera to /map. 
+2) Nevermind. rgbdslam (via RGBDSLAMv2 for Hydro). Yields octomap, localized pointclouds, tf info. 
+3) Octomap to mesh. Or a pointcloud. *Do just one pointcloud!* See pcl::TextureMapping. 
+4) Project an image onto a mesh. *Do single pointcloud image onto single pointcloud mesh!*
+5) Visualize in RViz. *See above!*
+6) Point a Camera display at it. 
+ a) Maybe have the camera move according to the visual odometry frame in the bag file, for fun.
